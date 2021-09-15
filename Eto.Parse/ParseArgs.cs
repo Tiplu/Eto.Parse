@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
+using System.Linq;
 
 namespace Eto.Parse
 {
@@ -19,6 +20,8 @@ namespace Eto.Parse
 		readonly Dictionary<object, object> properties = new Dictionary<object, object>();
 
 		public Dictionary<object, object> Properties { get { return properties; } }
+
+		public List<MatchCollection> TriedMatches = new List<MatchCollection>();
 
 		/// <summary>
 		/// Gets the root match when the grammar is matched
@@ -108,6 +111,15 @@ namespace Eto.Parse
 			}
 			if (pos > childErrorIndex)
 				childErrorIndex = pos;
+		}
+
+		public void StoreMatches()
+		{
+			var last = nodes.Last;
+			if (last != null && last.Any())
+			{
+				TriedMatches.Add(new MatchCollection(last));
+			}
 		}
 
 		/// <summary>

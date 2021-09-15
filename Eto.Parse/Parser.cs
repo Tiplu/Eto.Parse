@@ -267,6 +267,7 @@ namespace Eto.Parse
 				if (match >= 0)
 					return match;
 
+				args.StoreMatches();
 				args.SetChildError();
 				return match;
 			}
@@ -277,6 +278,7 @@ namespace Eto.Parse
 				var match = InnerParse(args);
 				if (match < 0)
 				{
+					args.StoreMatches();
 					args.PopFailed();
 					if (AddError)
 					{
@@ -300,6 +302,7 @@ namespace Eto.Parse
 				var match = InnerParse(args);
 				if (match < 0)
 				{
+					args.StoreMatches();
 					if (!AddError)
 					{
 						args.SetChildError();

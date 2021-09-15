@@ -19,12 +19,15 @@ namespace Eto.Parse
 
 		public IEnumerable<Parser> Errors { get { return errors ?? Enumerable.Empty<Parser>(); } }
 
-		public GrammarMatch(Grammar grammar, Scanner scanner, int index, int length, MatchCollection matches, int errorIndex, int childErrorIndex, IEnumerable<Parser> errors)
+		public List<MatchCollection> TriedMatches = new List<MatchCollection>();
+
+		public GrammarMatch(Grammar grammar, Scanner scanner, int index, int length, MatchCollection matches, int errorIndex, int childErrorIndex, IEnumerable<Parser> errors, List<MatchCollection> triedMatches)
 			: base(grammar.Name, grammar, scanner, index, length, matches)
 		{
 			this.errors = errors;
 			this.ErrorIndex = errorIndex;
 			this.ChildErrorIndex = childErrorIndex;
+			this.TriedMatches = triedMatches;
 		}
 
 		public string GetContext(int index, int count, string indicator = ">>>")

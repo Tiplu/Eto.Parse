@@ -365,7 +365,7 @@ namespace Eto.Parse
 					childErrorIndex = args.ChildErrorIndex;
 				}
 
-				args.Root = new GrammarMatch(this, scanner, pos, match, matches, errorIndex, childErrorIndex, errors);
+				args.Root = new GrammarMatch(this, scanner, pos, match, matches, errorIndex, childErrorIndex, errors, args.TriedMatches);
 				return match;
 			}
 			return base.InnerParse(args);
