@@ -1,3 +1,4 @@
+using Eto.Parse.Parsers;
 using System;
 using System.Collections.Generic;
 using System.Collections.Specialized;
@@ -13,8 +14,65 @@ namespace Eto.Parse
 	/// </remarks>
 	public class ParseArgs
 	{
+		public class ParentParser
+		{
+			public Parser Parser;
+			public string Name => Parser.Name;
+			public int ErrorIndex;
+
+			public ParentParser(Parser parser, int errorIndex)
+			{
+				Parser = parser;
+				ErrorIndex = errorIndex;
+			}
+
+			public override int GetHashCode()
+			{
+				return $"{Name}{ErrorIndex}".GetHashCode();
+			}
+
+			public override bool Equals(object obj)
+			{
+				if (obj is ParentParser parent)
+					return ReferenceEquals(parent.Parser, Parser) && ErrorIndex == parent.ErrorIndex;
+				return false;
+			}
+		}
+
+		public class StackPusher : IDisposable
+		{
+			public class StackEntry
+			{
+				public Parser Parser;
+				public bool Failed;
+
+				public StackEntry(Parser parser, bool failed)
+				{
+					Parser = parser;
+					Failed = failed;
+				}
+			}
+
+			private ParseArgs Args;
+			public StackPusher(ParseArgs args, Parser thisParser)
+			{
+				Args = args;
+				args.CurrentParserStack.Push(new StackEntry(thisParser, false));
+			}
+
+			public void MarkFailed()
+			{
+				Args.CurrentParserStack.Peek().Failed = true;
+			}
+
+			public void Dispose()
+			{
+				Args.CurrentParserStack.Pop();
+			}
+		}
+
 		readonly SlimStack<MatchCollection> nodes = new SlimStack<MatchCollection>(50);
-		readonly List<Parser> errors = new List<Parser>();
+		private Dictionary<LiteralTerminal, HashSet<ParentParser>> errors = new Dictionary<LiteralTerminal, HashSet<ParentParser>>();
 		int childErrorIndex = -1;
 		int errorIndex = -1;
 		readonly Dictionary<object, object> properties = new Dictionary<object, object>();
@@ -22,6 +80,8 @@ namespace Eto.Parse
 		public Dictionary<object, object> Properties { get { return properties; } }
 
 		public List<MatchCollection> TriedMatches = new List<MatchCollection>();
+
+		public Stack<StackPusher.StackEntry> CurrentParserStack = new Stack<StackPusher.StackEntry>();
 
 		/// <summary>
 		/// Gets the root match when the grammar is matched
@@ -79,7 +139,7 @@ namespace Eto.Parse
 		/// child.  To get the child index, use <see cref="ChildErrorIndex"/>
 		/// </remarks>
 		/// <value>The list of parsers that have errors</value>
-		public List<Parser> Errors { get { return errors; } }
+		public IReadOnlyDictionary<LiteralTerminal, HashSet<ParentParser>> Errors => errors;
 
 		internal ParseArgs(Grammar grammar, Scanner scanner)
 		{
@@ -92,34 +152,42 @@ namespace Eto.Parse
 			get { return nodes.Count <= 1; }
 		}
 
-		/// <summary>
-		/// Adds an error for the specified parser at the current position
-		/// </summary>
-		/// <param name="parser">Parser to add the error for</param>
-		public void AddError(Parser parser)
+		public void ClearErrors()
 		{
-			var pos = Scanner.Position;
-			if (pos > errorIndex)
-			{
-				errorIndex = pos;
-				errors.Clear();
-				errors.Add(parser);
-			}
-			else if (pos == errorIndex)
-			{
-				errors.Add(parser);
-			}
-			if (pos > childErrorIndex)
-				childErrorIndex = pos;
+			errors = KeepErrors().ToDictionary(x => x.Key, x => x.Value);
 		}
 
-		public void StoreMatches()
+		private IEnumerable<KeyValuePair<LiteralTerminal, HashSet<ParentParser>>> KeepErrors()
 		{
-			var last = nodes.Last;
-			if (last != null && last.Any())
+			string scannerValue = Scanner.Value;
+			foreach (KeyValuePair<LiteralTerminal, HashSet<ParentParser>> kvp in errors)
 			{
-				TriedMatches.Add(new MatchCollection(last));
+				string ltValue = kvp.Key.Value.ToLowerInvariant();
+
+				HashSet<ParentParser> possibleErrors = new HashSet<ParentParser>();
+				foreach (ParentParser parent in kvp.Value)
+				{
+					string fromErrorUntrimmed = scannerValue.Substring(parent.ErrorIndex).ToLowerInvariant();
+					string fromErrorTrimmed = fromErrorUntrimmed.TrimStart();
+
+					if (ltValue.Contains(fromErrorTrimmed))
+						possibleErrors.Add(new ParentParser(parent.Parser, parent.ErrorIndex + fromErrorUntrimmed.Length - fromErrorTrimmed.Length));
+				}
+
+				if (possibleErrors.Any())
+					yield return new KeyValuePair<LiteralTerminal, HashSet<ParentParser>>(kvp.Key, possibleErrors);
 			}
+		}
+
+		public void AddLiteralError(LiteralTerminal parser)
+		{
+			Parser p = CurrentParserStack.First(x => !string.IsNullOrEmpty(x.Parser.Name)).Parser;
+			if (!errors.TryGetValue(parser, out HashSet<ParentParser> list))
+			{
+				list = new HashSet<ParentParser>();
+				errors.Add(parser, list);
+			}
+			list.Add(new ParentParser(p, Scanner.Position));
 		}
 
 		/// <summary>
@@ -183,6 +251,15 @@ namespace Eto.Parse
 			}
 		}
 
+		public void StoreMatches()
+		{
+			var last = nodes.Last;
+			if (last != null && last.Any())
+			{
+				TriedMatches.Add(new MatchCollection(last));
+			}
+		}
+
 		/// <summary>
 		/// Clears the matches of the current match tree node
 		/// </summary>
@@ -193,7 +270,9 @@ namespace Eto.Parse
 		{
 			var last = nodes.Last;
 			if (last != null)
+			{
 				last.Clear();
+			}
 		}
 
 		/// <summary>

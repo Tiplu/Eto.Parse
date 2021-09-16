@@ -89,6 +89,7 @@ namespace Eto.Parse
 
 		protected override int InnerParse(ParseArgs args)
 		{
+			if (Name == "number__var") { }
 			if (Inner != null)
 				return Inner.Parse(args);
 			return 0;

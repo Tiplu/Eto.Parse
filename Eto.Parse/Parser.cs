@@ -194,7 +194,7 @@ namespace Eto.Parse
 			addMatchSet = other.addMatchSet;
 			addError = other.addError;
 			addErrorSet = other.addErrorSet;
-			
+
 			args.Add(other, this);
 		}
 
@@ -217,9 +217,9 @@ namespace Eto.Parse
 			while (stack.Count > 0)
 			{
 				var current = stack.Pop();
-                action?.Invoke(current);
-                visited.Add(current);
-                foreach (var item in current.GetChildren())
+				action?.Invoke(current);
+				visited.Add(current);
+				foreach (var item in current.GetChildren())
 				{
 					if (!visited.Contains(item) && (filter == null || filter(item)))
 						stack.Push(item);
@@ -273,28 +273,30 @@ namespace Eto.Parse
 			}
 			else if (mode == ParseMode.NamedChildren)
 			{
-				args.Push();
-				var pos = args.Scanner.Position;
-				var match = InnerParse(args);
-				if (match < 0)
+				using (ParseArgs.StackPusher stack = new ParseArgs.StackPusher(args, this))
 				{
-					args.StoreMatches();
-					args.PopFailed();
-					if (AddError)
+					args.Push();
+					var pos = args.Scanner.Position;
+					var match = InnerParse(args);
+					if (match < 0)
 					{
-						args.AddError(this);
+						args.StoreMatches();
+						args.PopFailed();
+						if (AddError)
+						{
+							return -1;
+						}
+						args.SetChildError();
 						return -1;
 					}
-					args.SetChildError();
-					return -1;
-				}
-				if (AddMatch)
-				{
-					args.PopMatch(this, pos, match);
+					if (AddMatch)
+					{
+						args.PopMatch(this, pos, match);
+						return match;
+					}
+					args.PopSuccess();
 					return match;
 				}
-				args.PopSuccess();
-				return match;
 			}
 			else // if (mode == ParseMode.NameOrError)
 			{
@@ -306,10 +308,6 @@ namespace Eto.Parse
 					if (!AddError)
 					{
 						args.SetChildError();
-					}
-					else
-					{
-						args.AddError(this);
 					}
 				}
 				else if (AddMatch)
@@ -420,7 +418,7 @@ namespace Eto.Parse
 				yield return this;
 		}
 
-		public Parser this [string parserId]
+		public Parser this[string parserId]
 		{
 			get { return Find(parserId).FirstOrDefault(); }
 		}
@@ -472,7 +470,7 @@ namespace Eto.Parse
 		/// <param name="name">Name of the parser(s) to match, or null to set all children</param>
 		/// <typeparam name="T">The type of parser to update</typeparam>
 		public void SetError<T>(bool addError, string name = null)
-			where T: Parser
+			where T : Parser
 		{
 			var children = Children.OfType<T>();
 			if (name != null)

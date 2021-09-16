@@ -6,6 +6,8 @@ namespace Eto.Parse
 	{
 		public int Position { get; set; }
 
+		public abstract string Value { get; }
+
 		public abstract int Advance(int length);
 
 		public abstract bool IsEof { get; }

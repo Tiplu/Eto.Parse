@@ -57,6 +57,7 @@ Changes for v1.2:
 * Add RepeatParser.SkipUntil and CaptureUntil to specify how to deal with the until parser (default is false for both)
 * Included xml documentation to give better help for common things (not everything is documented yet)
      </PackageReleaseNotes>
+    <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     
   </PropertyGroup>
     

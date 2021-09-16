@@ -39,12 +39,34 @@ namespace Eto.Parse.Parsers
 
 		protected override int InnerParse(ParseArgs args)
 		{
-			return !args.Scanner.ReadString(Value, caseSensitive) ? -1 : Value.Length;
+			if (!args.Scanner.ReadString(Value, caseSensitive))
+			{
+				args.AddLiteralError(this);
+				return -1;
+			}
+			return Value.Length;
 		}
 
 		public override Parser Clone(ParserCloneArgs args)
 		{
 			return new LiteralTerminal(this, args);
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (obj is LiteralTerminal lt)
+				return lt.Value == Value;
+			return false;
+		}
+
+		public override int GetHashCode()
+		{
+			return Value.GetHashCode();
+		}
+
+		public override string ToString()
+		{
+			return Value;
 		}
 	}
 }

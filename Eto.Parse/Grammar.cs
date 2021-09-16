@@ -350,22 +350,23 @@ namespace Eto.Parse
 
 				var errorIndex = -1;
 				var childErrorIndex = -1;
-				IEnumerable<Parser> errors = null;
+				//IEnumerable<Parser> errors = null;
 				if (match < 0 || match == args.ErrorIndex)
 				{
-					var errorList = new List<Parser>(args.Errors.Count);
-					for (int i = 0; i < args.Errors.Count; i++)
-					{
-						var error = args.Errors[i];
-						if (!errorList.Contains(error))
-							errorList.Add(error);
-					}
-					errors = errorList;
+					//var errorList = new List<Parser>(args.Errors.Count());
+					//for (int i = 0; i < args.Errors.Count(); i++)
+					//{
+					//	var error = args.Errors[i];
+					//	if (!errorList.Contains(error))
+					//		errorList.Add(error);
+					//}
+					//errors = errorList;
 					errorIndex = args.ErrorIndex;
 					childErrorIndex = args.ChildErrorIndex;
 				}
 
-				args.Root = new GrammarMatch(this, scanner, pos, match, matches, errorIndex, childErrorIndex, errors, args.TriedMatches);
+				args.ClearErrors();
+				args.Root = new GrammarMatch(this, scanner, pos, match, matches, errorIndex, childErrorIndex, args.Errors, args.TriedMatches);
 				return match;
 			}
 			return base.InnerParse(args);

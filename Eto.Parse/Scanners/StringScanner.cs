@@ -13,7 +13,7 @@ namespace Eto.Parse.Scanners
 			get { return Position >= end; }
 		}
 
-		public string Value
+		public override string Value
 		{
 			get { return value; }
 		}
