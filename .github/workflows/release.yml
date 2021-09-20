@@ -32,6 +32,6 @@ jobs:
     - name: Test
       run: dotnet test --no-build --verbosity normal Eto.Parse
     - name: Pack
-      run: dotnet pack -p:PackageVersion=${{ steps.tag.outputs.tag }} --output nupkgs Tiplu.Eto.Parse
+      run: dotnet pack -p:PackageVersion=${{ steps.tag.outputs.tag }} --output nupkgs Eto.Parse
     - name: Publish
       run: dotnet nuget push nupkgs/*.nupkg -s "https://nuget.pkg.github.com/Tiplu/index.json" --api-key ${{ secrets.GITHUB_TOKEN }}
