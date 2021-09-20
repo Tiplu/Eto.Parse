@@ -14,7 +14,7 @@ namespace Eto.Parse.Tests.Parsers
 			var sample = "123.4567,1234567";
 
 			var grammar = new Grammar();
-			var num = new NumberParser { AllowDecimal = true, AllowSign = false };
+			var num = new NumberParser { Name = "Test", AllowDecimal = true, AllowSign = false };
 
 			grammar.Inner = (+num.Named("str")).SeparatedBy(",");
 
@@ -29,7 +29,7 @@ namespace Eto.Parse.Tests.Parsers
 			var sample = "123.4567,+123.4567,-123.4567";
 
 			var grammar = new Grammar();
-			var num = new NumberParser { AllowSign = true, AllowDecimal = true };
+			var num = new NumberParser { Name = "Test", AllowSign = true, AllowDecimal = true };
 
 			grammar.Inner = (+num.Named("str")).SeparatedBy(",");
 
@@ -44,7 +44,7 @@ namespace Eto.Parse.Tests.Parsers
 			var sample = "123E-02,123E+10,123.4567E+5,1234E2";
 
 			var grammar = new Grammar();
-			var num = new NumberParser { AllowDecimal = true, AllowExponent = true };
+			var num = new NumberParser { Name = "Test", AllowDecimal = true, AllowExponent = true };
 
 			grammar.Inner = (+num.Named("str")).SeparatedBy(",");
 
@@ -59,7 +59,7 @@ namespace Eto.Parse.Tests.Parsers
 			var sample = "123.4567,+123.4567,-123.4567";
 
 			var grammar = new Grammar();
-			var num = new NumberParser { AllowSign = true, AllowDecimal = true, ValueType = typeof(decimal) };
+			var num = new NumberParser { Name = "Test", AllowSign = true, AllowDecimal = true, ValueType = typeof(decimal) };
 
 			grammar.Inner = (+num.Named("str")).SeparatedBy(",");
 
@@ -74,7 +74,7 @@ namespace Eto.Parse.Tests.Parsers
 			var sample = "123,+123,-123";
 
 			var grammar = new Grammar();
-			var num = new NumberParser { AllowSign = true, AllowDecimal = true, ValueType = typeof(int) };
+			var num = new NumberParser { Name = "Test", AllowSign = true, AllowDecimal = true, ValueType = typeof(int) };
 
 			grammar.Inner = (+num.Named("str")).SeparatedBy(",");
 
@@ -83,20 +83,20 @@ namespace Eto.Parse.Tests.Parsers
 			CollectionAssert.AreEquivalent(new Int32[] { 123, 123, -123 }, match.Find("str").Select(m => (int)m.Value));
 		}
 
-		[Test]
-		public void TestErrorAtEnd()
-		{
-			var sample = "Num:";
+		//[Test]
+		//public void TestErrorAtEnd()
+		//{
+		//	var sample = "Num:";
 
-			var grammar = new Grammar();
-			var num = new NumberParser { };
-			grammar.Inner = "Num:" & num.WithName("num");
+		//	var grammar = new Grammar();
+		//	var num = new NumberParser { Name = "Test"};
+		//	grammar.Inner = "Num:" & num.WithName("num");
 
-			var match = grammar.Match(sample);
-			Assert.IsFalse(match.Success, match.ErrorMessage);
-			Assert.AreEqual(sample.Length, match.ErrorIndex, "Error index should be at the end");
-			Assert.AreEqual(sample.Length, match.ChildErrorIndex, "Child error index should be at the end");
-		}
+		//	var match = grammar.Match(sample);
+		//	Assert.IsFalse(match.Success, match.ErrorMessage);
+		//	Assert.AreEqual(sample.Length, match.ErrorIndex, "Error index should be at the end");
+		//	Assert.AreEqual(sample.Length, match.ChildErrorIndex, "Child error index should be at the end");
+		//}
 	}
 }
 

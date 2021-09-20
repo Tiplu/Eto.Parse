@@ -29,7 +29,7 @@ namespace Eto.Parse.Tests.Parsers
 			var sample = "\"string\\'\\\"\\a\\b\\f\\n\\r\\t\\v\\x123\\u1234\\U00001234\\0 1\",'string\\'\\\"\\a\\b\\f\\n\\r\\t\\v\\x123\\u1234\\U00001234\\0 2'";
 
 			var grammar = new Grammar();
-			var str = new StringParser { AllowEscapeCharacters = true  };
+			var str = new StringParser { Name = "Test", AllowEscapeCharacters = true  };
 
 			grammar.Inner = (+str.Named("str")).SeparatedBy(",");
 
@@ -45,7 +45,7 @@ namespace Eto.Parse.Tests.Parsers
 			var sample = "\"string\"\" ''1'\",'string'' \"\"2\"'";
 
 			var grammar = new Grammar();
-			var str = new StringParser { AllowDoubleQuote = true };
+			var str = new StringParser { Name = "Test", AllowDoubleQuote = true };
 
 			grammar.Inner = (+str.Named("str")).SeparatedBy(",");
 
@@ -60,7 +60,7 @@ namespace Eto.Parse.Tests.Parsers
 			var samples = new string[] { "string1", "\"string 2", "'string 3", "'string ''4", "string5'", "string6\"", "\"string\\\"7\"", "string 8" };
 
 			var grammar = new Grammar();
-			var str = new StringParser { AllowDoubleQuote = false, AllowNonQuoted = false, AllowEscapeCharacters = false };
+			var str = new StringParser { Name = "Test", AllowDoubleQuote = false, AllowNonQuoted = false, AllowEscapeCharacters = false };
 
 			grammar.Inner = str.Named("str");
 
@@ -77,7 +77,7 @@ namespace Eto.Parse.Tests.Parsers
 			var samples = new string[] { "string 1", "\"string 2", "'string 3", "'string ''4", "string5'", "string6\"", "\"string\\\"7" };
 
 			var grammar = new Grammar();
-			var str = new StringParser { AllowDoubleQuote = true, AllowNonQuoted = true, AllowEscapeCharacters = true };
+			var str = new StringParser { Name = "Test", AllowDoubleQuote = true, AllowNonQuoted = true, AllowEscapeCharacters = true };
 
 			grammar.Inner = str.Named("str");
 

@@ -29,14 +29,14 @@ namespace Eto.Parse.Parsers
 			AllowExponent = other.AllowExponent;
 			DecimalSeparator = other.DecimalSeparator;
 			ValueType = other.ValueType;
-			Culture = CultureInfo.CurrentCulture;
+			Culture = CultureInfo.InvariantCulture;
 		}
 
 		public NumberParser()
 		{
 			DecimalSeparator = '.';
 			ValueType = typeof(decimal);
-			Culture = CultureInfo.CurrentCulture;
+			Culture = CultureInfo.InvariantCulture;
 		}
 
 		protected override void InnerInitialize(ParserInitializeArgs args)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Linq;
 using Eto.Parse.Parsers;
 using NUnit.Framework;
@@ -17,7 +17,7 @@ namespace Eto.Parse.Tests.Parsers
                 char.ConvertFromUtf32(0x10FFFF));
 
             var grammar = new Grammar();
-            var parser = new AnySurrogatePairTerminal();
+            var parser = new AnySurrogatePairTerminal() { Name = "Test" };
             grammar.Inner = (+parser.Named("char")).SeparatedBy(",");
 
             var match = grammar.Match(chars);
@@ -32,8 +32,8 @@ namespace Eto.Parse.Tests.Parsers
             var sample = char.ConvertFromUtf32(0x87FFF);
 
             var grammar = new Grammar();
-            var parser = new SingleSurrogatePairTerminal(0x87FFF);
-            grammar.Inner = parser.Named("char");
+            var parser = new SingleSurrogatePairTerminal(0x87FFF) { Name = "Test" };
+			grammar.Inner = parser.Named("char");
 
             var match = grammar.Match(sample);
 
@@ -47,8 +47,8 @@ namespace Eto.Parse.Tests.Parsers
             var sample = char.ConvertFromUtf32(0x17DF6);
 
             var grammar = new Grammar();
-            var parser = new SingleSurrogatePairTerminal(0x87FFF);
-            grammar.Inner = parser.Named("char");
+            var parser = new SingleSurrogatePairTerminal(0x87FFF) { Name = "Test" };
+			grammar.Inner = parser.Named("char");
 
             var match = grammar.Match(sample);
 
@@ -63,8 +63,8 @@ namespace Eto.Parse.Tests.Parsers
             var sample = char.ConvertFromUtf32(codePoint);
 
             var grammar = new Grammar();
-            var parser = new SurrogatePairRangeTerminal(0x12345, 0x8F4FE);
-            grammar.Inner = parser.Named("char");
+            var parser = new SurrogatePairRangeTerminal(0x12345, 0x8F4FE) { Name = "Test" };
+			grammar.Inner = parser.Named("char");
 
             var match = grammar.Match(sample);
 
@@ -78,8 +78,8 @@ namespace Eto.Parse.Tests.Parsers
             var sample = char.ConvertFromUtf32(codePoint);
 
             var grammar = new Grammar();
-            var parser = new SurrogatePairRangeTerminal(0x12346, 0x8F4FD);
-            grammar.Inner = parser.Named("char");
+            var parser = new SurrogatePairRangeTerminal(0x12346, 0x8F4FD) { Name = "Test" };
+			grammar.Inner = parser.Named("char");
 
             var match = grammar.Match(sample);
 
@@ -105,8 +105,8 @@ namespace Eto.Parse.Tests.Parsers
             var sample = "abc" + char.ConvertFromUtf32(0x8F4FE) + "def" + char.ConvertFromUtf32(0x56734);
 
             var grammar = new Grammar();
-            var parser = new LetterTerminal() | new AnySurrogatePairTerminal();
-            grammar.Inner = (+parser).Named("char");
+            var parser = new LetterTerminal() { Name = "Test" } | new AnySurrogatePairTerminal() { Name = "Test" };
+			grammar.Inner = (+parser).Named("char");
 
             var match = grammar.Match(sample);
 
