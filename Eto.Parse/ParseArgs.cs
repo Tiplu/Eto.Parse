@@ -181,13 +181,16 @@ namespace Eto.Parse
 
 		public void AddLiteralError(LiteralTerminal parser)
 		{
-			Parser p = CurrentParserStack.First(x => !string.IsNullOrEmpty(x.Parser.Name)).Parser;
 			if (!errors.TryGetValue(parser, out HashSet<ParentParser> list))
 			{
 				list = new HashSet<ParentParser>();
 				errors.Add(parser, list);
 			}
-			list.Add(new ParentParser(p, Scanner.Position));
+			Parser p = CurrentParserStack.FirstOrDefault(x => !string.IsNullOrEmpty(x.Parser.Name))?.Parser;
+			if (p != null)
+			{
+				list.Add(new ParentParser(p, Scanner.Position));
+			}
 		}
 
 		/// <summary>
@@ -253,10 +256,13 @@ namespace Eto.Parse
 
 		public void StoreMatches()
 		{
-			var last = nodes.Last;
-			if (last != null && last.Any())
+			if (nodes.count > 0)
 			{
-				TriedMatches.Add(new MatchCollection(last));
+				var last = nodes.Last;
+				if (last != null && last.Any())
+				{
+					TriedMatches.Add(new MatchCollection(last));
+				}
 			}
 		}
 

@@ -7,7 +7,7 @@ namespace Eto.Parse
 	/// </summary>
 	class SlimStack<T> : List<T>
 	{
-		int count;
+		public int count { get; private set; }
 
 		public new int Count
 		{
