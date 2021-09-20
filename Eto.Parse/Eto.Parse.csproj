@@ -58,6 +58,7 @@ Changes for v1.2:
 * Included xml documentation to give better help for common things (not everything is documented yet)
      </PackageReleaseNotes>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
+    <RepositoryUrl>https://github.com/Tiplu/Eto.Parse</RepositoryUrl>
     
   </PropertyGroup>
     
