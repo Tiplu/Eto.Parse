@@ -267,36 +267,32 @@ namespace Eto.Parse
 				if (match >= 0)
 					return match;
 
-				args.StoreMatches();
 				args.SetChildError();
 				return match;
 			}
 			else if (mode == ParseMode.NamedChildren)
 			{
-				using (ParseArgs.StackPusher stack = new ParseArgs.StackPusher(args, this))
+				args.Push();
+				var pos = args.Scanner.Position;
+				var match = InnerParse(args);
+				if (match < 0)
 				{
-					args.Push();
-					var pos = args.Scanner.Position;
-					var match = InnerParse(args);
-					if (match < 0)
+					args.PopFailed();
+					if (AddError)
 					{
-						args.StoreMatches();
-						args.PopFailed();
-						if (AddError)
-						{
-							return -1;
-						}
-						args.SetChildError();
+						args.AddError(this);
 						return -1;
 					}
-					if (AddMatch)
-					{
-						args.PopMatch(this, pos, match);
-						return match;
-					}
-					args.PopSuccess();
+					args.SetChildError();
+					return -1;
+				}
+				if (AddMatch)
+				{
+					args.PopMatch(this, pos, match);
 					return match;
 				}
+				args.PopSuccess();
+				return match;
 			}
 			else // if (mode == ParseMode.NameOrError)
 			{
@@ -304,7 +300,6 @@ namespace Eto.Parse
 				var match = InnerParse(args);
 				if (match < 0)
 				{
-					args.StoreMatches();
 					if (!AddError)
 					{
 						args.SetChildError();

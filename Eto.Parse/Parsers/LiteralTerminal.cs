@@ -41,7 +41,6 @@ namespace Eto.Parse.Parsers
 		{
 			if (!args.Scanner.ReadString(Value, caseSensitive))
 			{
-				args.AddLiteralError(this);
 				return -1;
 			}
 			return Value.Length;

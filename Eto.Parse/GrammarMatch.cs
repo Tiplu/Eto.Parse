@@ -9,7 +9,7 @@ namespace Eto.Parse
 {
 	public class GrammarMatch : Match
 	{
-		readonly IReadOnlyDictionary<LiteralTerminal, HashSet<ParentParser>> errors;
+		readonly IEnumerable<Parser> errors;
 
 		public int ErrorIndex { get; private set; }
 
@@ -19,17 +19,14 @@ namespace Eto.Parse
 
 		public int ChildErrorLine => ChildErrorIndex >= 0 ? Scanner.LineAtIndex(ChildErrorIndex) : -1;
 
-		public IReadOnlyDictionary<LiteralTerminal, HashSet<ParentParser>> Errors { get { return errors ?? new Dictionary<LiteralTerminal, HashSet<ParentParser>>(); } }
+		public IEnumerable<Parser> Errors => errors ?? Enumerable.Empty<Parser>();
 
-		public List<MatchCollection> TriedMatches = new List<MatchCollection>();
-
-		public GrammarMatch(Grammar grammar, Scanner scanner, int index, int length, MatchCollection matches, int errorIndex, int childErrorIndex, IReadOnlyDictionary<LiteralTerminal, HashSet<ParentParser>> errors, List<MatchCollection> triedMatches)
+		public GrammarMatch(Grammar grammar, Scanner scanner, int index, int length, MatchCollection matches, int errorIndex, int childErrorIndex, IEnumerable<Parser> errors)
 			: base(grammar.Name, grammar, scanner, index, length, matches)
 		{
 			this.errors = errors;
 			this.ErrorIndex = errorIndex;
 			this.ChildErrorIndex = childErrorIndex;
-			this.TriedMatches = triedMatches;
 		}
 
 		public string GetContext(int index, int count, string indicator = ">>>")
@@ -53,7 +50,7 @@ namespace Eto.Parse
 				sb.AppendLine(string.Format("Index={0}, Line={1}, Context=\"{2}\"", ErrorIndex, Scanner.LineAtIndex(ErrorIndex), GetContext(ErrorIndex, 10)));
 			if (ChildErrorIndex >= 0 && ChildErrorIndex != ErrorIndex)
 				sb.AppendLine(string.Format("ChildIndex={0}, Line={1}, Context=\"{2}\"", ChildErrorIndex, Scanner.LineAtIndex(ChildErrorIndex), GetContext(ChildErrorIndex, 10)));
-			var messages = string.Join("\n", Errors.Select(r => r.Key.GetErrorMessage(detailed)));
+			var messages = string.Join("\n", Errors.Select(r => r.GetErrorMessage(detailed)));
 			if (!string.IsNullOrEmpty(messages))
 			{
 				sb.AppendLine("Expected:");
