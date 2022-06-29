@@ -350,10 +350,10 @@ namespace Eto.Parse
 
 				var errorIndex = -1;
 				var childErrorIndex = -1;
-				IEnumerable<Parser> errors = null;
+				IEnumerable<(Parser P, bool IsOptional)> errors = null;
 				if (match < 0 || match == args.ErrorIndex)
 				{
-					var errorList = new List<Parser>(args.Errors.Count());
+					var errorList = new List<(Parser P, bool IsOptional)>(args.Errors.Count());
 					for (int i = 0; i < args.Errors.Count(); i++)
 					{
 						var error = args.Errors[i];

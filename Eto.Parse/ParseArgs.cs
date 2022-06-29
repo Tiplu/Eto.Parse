@@ -14,11 +14,31 @@ namespace Eto.Parse
 	/// </remarks>
 	public class ParseArgs
 	{
+		public class Opt : IDisposable
+		{
+			private readonly Stack<bool> _stack;
+			public Opt(Stack<bool> stack, bool nextState)
+			{
+				_stack = stack;
+				_stack.Push(nextState);
+			}
+
+			public void Dispose()
+			{
+				_stack.Pop();
+			}
+		}
+
 		readonly SlimStack<MatchCollection> nodes = new SlimStack<MatchCollection>(50);
-		readonly List<Parser> errors = new List<Parser>();
+		readonly List<(Parser P, bool IsOptional)> errors = new List<(Parser P, bool IsOptional)>();
 		int childErrorIndex = -1;
 		int errorIndex = -1;
 		readonly Dictionary<object, object> properties = new Dictionary<object, object>();
+
+		readonly Stack<bool> isInOptionalBlock = new Stack<bool>(100);
+
+		public Opt OptionalBlock(bool isOptional) => new Opt(isInOptionalBlock, isOptional);
+
 
 		public Dictionary<object, object> Properties { get { return properties; } }
 
@@ -78,7 +98,7 @@ namespace Eto.Parse
 		/// child.  To get the child index, use <see cref="ChildErrorIndex"/>
 		/// </remarks>
 		/// <value>The list of parsers that have errors</value>
-		public List<Parser> Errors => errors;
+		public List<(Parser P, bool IsOptional)> Errors => errors;
 
 		internal ParseArgs(Grammar grammar, Scanner scanner)
 		{
@@ -98,10 +118,12 @@ namespace Eto.Parse
 			{
 				errorIndex = pos;
 				errors.Clear();
-				errors.Add(parser);
+				errors.Add((parser, isInOptionalBlock.Any() && isInOptionalBlock.Peek()));
 			}
 			else if (pos == errorIndex)
-				errors.Add(parser);
+			{
+				errors.Add((parser, isInOptionalBlock.Any() && isInOptionalBlock.Peek()));
+			}
 			if (pos > childErrorIndex)
 				childErrorIndex = pos;
 		}

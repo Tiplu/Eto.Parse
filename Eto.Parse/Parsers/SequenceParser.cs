@@ -38,10 +38,10 @@ namespace Eto.Parse.Parsers
 			if (args.Detailed && args.Push(this))
 			{
 				var sb = new StringBuilder();
-                for (int i = 0; i < Items.Count; i++)
+				for (int i = 0; i < Items.Count; i++)
 				{
-                    Parser item = Items[i];
-                    if (sb.Length > 0)
+					Parser item = Items[i];
+					if (sb.Length > 0)
 						sb.Append(", ");
 					sb.Append(item != null ? item.GetErrorMessage(args) : "null");
 				}
@@ -66,43 +66,64 @@ namespace Eto.Parse.Parsers
 					return childMatch;
 				}
 
-				length += childMatch;
-				for (int i = 1; i < count; i++)
+				using (args.OptionalBlock(false))
 				{
-					var sepMatch = separator.Parse(args);
-					if (sepMatch >= 0)
+					length += childMatch;
+					for (int i = 1; i < count; i++)
 					{
-						parser = Items[i];
-						childMatch = parser.Parse(args);
-						if (childMatch > 0)
+						var sepMatch = separator.Parse(args);
+						if (sepMatch >= 0)
 						{
-							length += childMatch + sepMatch;
-							continue;
+							parser = Items[i];
+							childMatch = parser.Parse(args);
+							if (childMatch > 0)
+							{
+								length += childMatch + sepMatch;
+								continue;
+							}
+							else if (childMatch == 0)
+							{
+								continue;
+							}
 						}
-						else if (childMatch == 0)
-						{
-							continue;
-						}
+						// failed
+						args.Scanner.Position = pos;
+						return -1;
 					}
-					// failed
-					args.Scanner.Position = pos;
-					return -1;
+					return length;
 				}
-				return length;
 			}
-			for (int i = 0; i < count; i++)
+			else
 			{
-				var parser = Items[i];
+				var parser = Items[0];
 				var childMatch = parser.Parse(args);
 				if (childMatch >= 0)
 				{
 					length += childMatch;
-					continue;
 				}
-				args.Scanner.Position = pos;
-				return -1;
+				else
+				{
+					args.Scanner.Position = pos;
+					return -1;
+				}
+
+				using (args.OptionalBlock(false))
+				{
+					for (int i = 1; i < count; i++)
+					{
+						parser = Items[i];
+						childMatch = parser.Parse(args);
+						if (childMatch >= 0)
+						{
+							length += childMatch;
+							continue;
+						}
+						args.Scanner.Position = pos;
+						return -1;
+					}
+					return length;
+				}
 			}
-			return length;
 		}
 
 		public override Parser Clone(ParserCloneArgs args)
@@ -129,7 +150,8 @@ namespace Eto.Parse.Parsers
 			if (args.Push(this))
 			{
 				var item = Items[0];
-				if (item != null && item.IsLeftRecursive(args)) {
+				if (item != null && item.IsLeftRecursive(args))
+				{
 					args.Pop();
 					return true;
 				}
@@ -146,10 +168,10 @@ namespace Eto.Parse.Parsers
 
 		protected override IEnumerable<Parser> GetChildren()
 		{
-            var children = base.GetChildren();
-            if (Separator != null)
-                children = children.Concat(new[] { Separator });
-            return children;
+			var children = base.GetChildren();
+			if (Separator != null)
+				children = children.Concat(new[] { Separator });
+			return children;
 		}
 
 	}

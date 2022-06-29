@@ -9,7 +9,7 @@ namespace Eto.Parse
 {
 	public class GrammarMatch : Match
 	{
-		readonly IEnumerable<Parser> errors;
+		readonly IEnumerable<(Parser P, bool IsOptional)> errors;
 
 		public int ErrorIndex { get; private set; }
 
@@ -19,9 +19,9 @@ namespace Eto.Parse
 
 		public int ChildErrorLine => ChildErrorIndex >= 0 ? Scanner.LineAtIndex(ChildErrorIndex) : -1;
 
-		public IEnumerable<Parser> Errors => errors ?? Enumerable.Empty<Parser>();
+		public IEnumerable<(Parser P, bool IsOptional)> Errors => errors ?? Enumerable.Empty<(Parser P, bool IsOptional)>();
 
-		public GrammarMatch(Grammar grammar, Scanner scanner, int index, int length, MatchCollection matches, int errorIndex, int childErrorIndex, IEnumerable<Parser> errors)
+		public GrammarMatch(Grammar grammar, Scanner scanner, int index, int length, MatchCollection matches, int errorIndex, int childErrorIndex, IEnumerable<(Parser P, bool IsOptional)> errors)
 			: base(grammar.Name, grammar, scanner, index, length, matches)
 		{
 			this.errors = errors;
@@ -50,7 +50,7 @@ namespace Eto.Parse
 				sb.AppendLine(string.Format("Index={0}, Line={1}, Context=\"{2}\"", ErrorIndex, Scanner.LineAtIndex(ErrorIndex), GetContext(ErrorIndex, 10)));
 			if (ChildErrorIndex >= 0 && ChildErrorIndex != ErrorIndex)
 				sb.AppendLine(string.Format("ChildIndex={0}, Line={1}, Context=\"{2}\"", ChildErrorIndex, Scanner.LineAtIndex(ChildErrorIndex), GetContext(ChildErrorIndex, 10)));
-			var messages = string.Join("\n", Errors.Select(r => r.GetErrorMessage(detailed)));
+			var messages = string.Join("\n", Errors.Select(r => r.P.GetErrorMessage(detailed)));
 			if (!string.IsNullOrEmpty(messages))
 			{
 				sb.AppendLine("Expected:");
