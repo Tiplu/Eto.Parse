@@ -10,8 +10,10 @@ namespace Eto.Parse
 	public class GrammarMatch : Match
 	{
 		readonly IEnumerable<(Parser P, bool IsOptional)> errors;
+		readonly IEnumerable<(Parser P, bool IsOptional)> nextParser;
 
 		public int ErrorIndex { get; private set; }
+		public int NextMatchIndex { get; private set; }
 
 		public int ChildErrorIndex { get; private set; }
 
@@ -20,12 +22,15 @@ namespace Eto.Parse
 		public int ChildErrorLine => ChildErrorIndex >= 0 ? Scanner.LineAtIndex(ChildErrorIndex) : -1;
 
 		public IEnumerable<(Parser P, bool IsOptional)> Errors => errors ?? Enumerable.Empty<(Parser P, bool IsOptional)>();
+		public IEnumerable<(Parser P, bool IsOptional)> NextParser => nextParser ?? Enumerable.Empty<(Parser P, bool IsOptional)>();
 
-		public GrammarMatch(Grammar grammar, Scanner scanner, int index, int length, MatchCollection matches, int errorIndex, int childErrorIndex, IEnumerable<(Parser P, bool IsOptional)> errors)
+		public GrammarMatch(Grammar grammar, Scanner scanner, int index, int length, MatchCollection matches, int errorIndex, int nextMatchIndex, int childErrorIndex, IEnumerable<(Parser P, bool IsOptional)> errors, IEnumerable<(Parser P, bool IsOptional)> nextParser)
 			: base(grammar.Name, grammar, scanner, index, length, matches)
 		{
 			this.errors = errors;
+			this.nextParser = nextParser;
 			this.ErrorIndex = errorIndex;
+			this.NextMatchIndex = nextMatchIndex;
 			this.ChildErrorIndex = childErrorIndex;
 		}
 

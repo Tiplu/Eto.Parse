@@ -31,8 +31,10 @@ namespace Eto.Parse
 
 		readonly SlimStack<MatchCollection> nodes = new SlimStack<MatchCollection>(50);
 		readonly List<(Parser P, bool IsOptional)> errors = new List<(Parser P, bool IsOptional)>();
+		readonly List<(Parser P, bool IsOptional)> nextParserToken = new List<(Parser P, bool IsOptional)>();
 		int childErrorIndex = -1;
 		int errorIndex = -1;
+		int nextTokenIndex = -1;
 		readonly Dictionary<object, object> properties = new Dictionary<object, object>();
 
 		readonly Stack<bool> isInOptionalBlock = new Stack<bool>(100);
@@ -77,6 +79,7 @@ namespace Eto.Parse
 		/// </remarks>
 		/// <value>The index of the error.</value>
 		public int ErrorIndex { get { return errorIndex; } }
+		public int NextParserIndex { get { return nextTokenIndex; } }
 
 		/// <summary>
 		/// Gets the index of where the error action
@@ -99,6 +102,7 @@ namespace Eto.Parse
 		/// </remarks>
 		/// <value>The list of parsers that have errors</value>
 		public List<(Parser P, bool IsOptional)> Errors => errors;
+		public List<(Parser P, bool IsOptional)> NextParser => nextParserToken;
 
 		internal ParseArgs(Grammar grammar, Scanner scanner)
 		{
@@ -109,6 +113,20 @@ namespace Eto.Parse
 		internal bool IsRoot
 		{
 			get { return nodes.Count <= 1; }
+		}
+
+		public void AddNextParserToken(Parser parser, int pos)
+		{
+			if (pos > nextTokenIndex)
+			{
+				nextTokenIndex = pos;
+				nextParserToken.Clear();
+				nextParserToken.Add((parser, isInOptionalBlock.Any() && isInOptionalBlock.Peek()));
+			}
+			else if (pos == nextTokenIndex)
+			{
+				nextParserToken.Add((parser, isInOptionalBlock.Any() && isInOptionalBlock.Peek()));
+			}
 		}
 
 		public void AddError(Parser parser)

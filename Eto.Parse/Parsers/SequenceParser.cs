@@ -66,10 +66,41 @@ namespace Eto.Parse.Parsers
 					return childMatch;
 				}
 
+				int i = 1;
+
+				if (childMatch == 0)
+				{
+					// find the first real match
+					length += childMatch;
+					for (; i < count; i++)
+					{
+						var sepMatch = separator.Parse(args);
+						if (sepMatch >= 0)
+						{
+							parser = Items[i];
+							childMatch = parser.Parse(args);
+							if (childMatch > 0)
+							{
+								length += childMatch + sepMatch;
+								i++;
+								break;
+							}
+							else if (childMatch == 0)
+							{
+								continue;
+							}
+						}
+						// failed
+						args.Scanner.Position = pos;
+						return -1;
+					}
+				}
+
+				// After one match is found, the rest is required
 				using (args.OptionalBlock(false))
 				{
 					length += childMatch;
-					for (int i = 1; i < count; i++)
+					for (; i < count; i++)
 					{
 						var sepMatch = separator.Parse(args);
 						if (sepMatch >= 0)
@@ -88,6 +119,7 @@ namespace Eto.Parse.Parsers
 						}
 						// failed
 						args.Scanner.Position = pos;
+						args.AddNextParserToken(parser, pos/* + length*/);
 						return -1;
 					}
 					return length;
@@ -95,30 +127,36 @@ namespace Eto.Parse.Parsers
 			}
 			else
 			{
-				var parser = Items[0];
-				var childMatch = parser.Parse(args);
-				if (childMatch >= 0)
+				int i;
+				for (i = 0; i < count; i++)
 				{
-					length += childMatch;
-				}
-				else
-				{
-					args.Scanner.Position = pos;
-					return -1;
+					var parser = Items[i];
+					var childMatch = parser.Parse(args);
+					if (childMatch >= 0)
+					{
+						length += childMatch;
+						if (length > 0) { i++; break; } // real match
+					}
+					else
+					{
+						args.Scanner.Position = pos;
+						return -1;
+					}
 				}
 
 				using (args.OptionalBlock(false))
 				{
-					for (int i = 1; i < count; i++)
+					for (; i < count; i++)
 					{
-						parser = Items[i];
-						childMatch = parser.Parse(args);
+						var parser = Items[i];
+						var childMatch = parser.Parse(args);
 						if (childMatch >= 0)
 						{
 							length += childMatch;
 							continue;
 						}
 						args.Scanner.Position = pos;
+						args.AddNextParserToken(parser, pos/* + length*/);
 						return -1;
 					}
 					return length;
