@@ -30,8 +30,8 @@ namespace Eto.Parse
 		}
 
 		readonly SlimStack<MatchCollection> nodes = new SlimStack<MatchCollection>(50);
-		readonly List<(Parser P, bool IsOptional)> errors = new List<(Parser P, bool IsOptional)>();
-		readonly List<(Parser P, bool IsOptional)> nextParserToken = new List<(Parser P, bool IsOptional)>();
+		readonly List<ParseError> errors = new List<ParseError>();
+		readonly List<ParseError> nextParserToken = new List<ParseError>();
 		int childErrorIndex = -1;
 		int errorIndex = -1;
 		int nextTokenIndex = -1;
@@ -101,8 +101,8 @@ namespace Eto.Parse
 		/// child.  To get the child index, use <see cref="ChildErrorIndex"/>
 		/// </remarks>
 		/// <value>The list of parsers that have errors</value>
-		public List<(Parser P, bool IsOptional)> Errors => errors;
-		public List<(Parser P, bool IsOptional)> NextParser => nextParserToken;
+		public List<ParseError> Errors => errors;
+		public List<ParseError> NextParser => nextParserToken;
 
 		internal ParseArgs(Grammar grammar, Scanner scanner)
 		{
@@ -117,16 +117,16 @@ namespace Eto.Parse
 
 		public void AddNextParserToken(Parser parser, int pos)
 		{
-			if (pos > nextTokenIndex)
-			{
-				nextTokenIndex = pos;
-				nextParserToken.Clear();
-				nextParserToken.Add((parser, isInOptionalBlock.Any() && isInOptionalBlock.Peek()));
-			}
-			else if (pos == nextTokenIndex)
-			{
-				nextParserToken.Add((parser, isInOptionalBlock.Any() && isInOptionalBlock.Peek()));
-			}
+			//if (pos > nextTokenIndex)
+			//{
+			//	nextTokenIndex = pos;
+			//	nextParserToken.Clear();
+			//	nextParserToken.Add(new ParseError(parser, isInOptionalBlock.Any() && isInOptionalBlock.Peek(), pos));
+			//}
+			//else if (pos == nextTokenIndex)
+			//{
+			//	nextParserToken.Add(new ParseError(parser, isInOptionalBlock.Any() && isInOptionalBlock.Peek(), pos));
+			//}
 		}
 
 		public void AddError(Parser parser)
@@ -136,11 +136,11 @@ namespace Eto.Parse
 			{
 				errorIndex = pos;
 				errors.Clear();
-				errors.Add((parser, isInOptionalBlock.Any() && isInOptionalBlock.Peek()));
+				errors.Add(new ParseError(parser, isInOptionalBlock.Any() && isInOptionalBlock.Peek(), pos));
 			}
 			else if (pos == errorIndex)
 			{
-				errors.Add((parser, isInOptionalBlock.Any() && isInOptionalBlock.Peek()));
+				errors.Add(new ParseError(parser, isInOptionalBlock.Any() && isInOptionalBlock.Peek(), pos));
 			}
 			if (pos > childErrorIndex)
 				childErrorIndex = pos;
