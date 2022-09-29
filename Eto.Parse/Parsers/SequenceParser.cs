@@ -68,13 +68,14 @@ namespace Eto.Parse.Parsers
 
 				int i = 1;
 
+				int sepMatch = 0;
 				length += childMatch;
 				if (childMatch == 0)
 				{
 					// find the first real match
 					for (; i < count; i++)
 					{
-						var sepMatch = separator.Parse(args);
+						sepMatch = separator.Parse(args);
 						if (sepMatch >= 0)
 						{
 							parser = Items[i];
@@ -102,7 +103,7 @@ namespace Eto.Parse.Parsers
 				{
 					for (; i < count; i++)
 					{
-						var sepMatch = separator.Parse(args);
+						sepMatch = separator.Parse(args);
 						if (sepMatch >= 0)
 						{
 							parser = Items[i];
@@ -123,6 +124,10 @@ namespace Eto.Parse.Parsers
 						args.AddNextParserToken(parser, pos/* + length*/);
 						return -1;
 					}
+
+					// If the last childMatch was not matched, remove the last separator from the length again
+					if (childMatch == 0)
+						return length - sepMatch;
 					return length;
 				}
 			}
