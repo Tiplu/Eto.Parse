@@ -87,6 +87,7 @@ namespace Eto.Parse.Parsers
 							}
 							else if (childMatch == 0)
 							{
+								length += sepMatch;
 								continue;
 							}
 						}
@@ -113,6 +114,7 @@ namespace Eto.Parse.Parsers
 							}
 							else if (childMatch == 0)
 							{
+								length += sepMatch;
 								continue;
 							}
 						}
