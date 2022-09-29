@@ -68,10 +68,10 @@ namespace Eto.Parse.Parsers
 
 				int i = 1;
 
+				length += childMatch;
 				if (childMatch == 0)
 				{
 					// find the first real match
-					length += childMatch;
 					for (; i < count; i++)
 					{
 						var sepMatch = separator.Parse(args);
@@ -99,7 +99,6 @@ namespace Eto.Parse.Parsers
 				// After one match is found, the rest is required
 				using (args.OptionalBlock(false))
 				{
-					length += childMatch;
 					for (; i < count; i++)
 					{
 						var sepMatch = separator.Parse(args);
