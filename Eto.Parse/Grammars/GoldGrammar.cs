@@ -354,7 +354,7 @@ namespace Eto.Parse.Grammars
 
 		public GoldDefinition Build(string grammar)
 		{
-			var match = Match(grammar);
+			var match = Match(grammar, null);
 			if (!match.Success)
 				throw new FormatException(string.Format("Error parsing gold grammar: {0}", match.ErrorMessage));
 			return definition;

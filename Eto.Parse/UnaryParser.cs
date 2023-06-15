@@ -63,19 +63,6 @@ namespace Eto.Parse
 			base.InnerInitialize(args);
 		}
 
-		public override bool Contains(ParserContainsArgs args)
-		{
-			if (base.Contains(args))
-				return true;
-			if (Inner != null && args.Push(this))
-			{
-				var ret = Inner.Contains(args);
-				args.Pop();
-				return ret;
-			}
-			return false;
-		}
-
 		public override IEnumerable<Parser> Find(ParserFindArgs args)
 		{
 			if (Inner != null && args.Push(this))

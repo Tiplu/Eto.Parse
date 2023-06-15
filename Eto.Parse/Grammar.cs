@@ -371,10 +371,10 @@ namespace Eto.Parse
 			return base.InnerParse(args);
 		}
 
-		public GrammarMatch Match(string value)
+		public GrammarMatch Match(string value, IReadOnlyDictionary<Guid, TreeScanContainer> tree)
 		{
 			//value.ThrowIfNull("value");
-			return Match(new StringScanner(value));
+			return Match(new StringScanner(value, tree));
 		}
 
 		public GrammarMatch Match(Scanner scanner)
@@ -395,10 +395,10 @@ namespace Eto.Parse
 			return root;
 		}
 
-		public MatchCollection Matches(string value)
+		public MatchCollection Matches(string value, IReadOnlyDictionary<Guid, TreeScanContainer> tree)
 		{
 			value.ThrowIfNull("value");
-			return Matches(new StringScanner(value));
+			return Matches(new StringScanner(value, tree));
 		}
 
 		public MatchCollection Matches(Scanner scanner)

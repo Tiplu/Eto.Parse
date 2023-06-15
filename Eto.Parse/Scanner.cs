@@ -20,6 +20,8 @@ namespace Eto.Parse
 
 		public abstract string Substring(int index, int length);
 
+		public abstract bool FindInTree(Guid identifier, out string matchedValue, out string tokenName);
+
 		public abstract int LineAtIndex(int index);
 	}
 }

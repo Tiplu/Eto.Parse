@@ -1,4 +1,5 @@
 using Eto.Parse;
+using System;
 
 namespace Eto.Parse.Parsers
 {
@@ -8,6 +9,7 @@ namespace Eto.Parse.Parsers
 		public bool? CaseSensitive { get; set; }
 
 		public string Value { get; set; }
+		public Guid? TreeIndex { get; set; }
 
 		public override string DescriptiveName
 		{
@@ -39,11 +41,19 @@ namespace Eto.Parse.Parsers
 
 		protected override int InnerParse(ParseArgs args)
 		{
-			if (!args.Scanner.ReadString(Value, caseSensitive))
+			if (TreeIndex.HasValue)
 			{
-				return -1;
+				if (args.Scanner.FindInTree(TreeIndex.Value, out var matchedValue, out var tokenName))
+				{
+					return matchedValue.Length;
+				}
 			}
-			return Value.Length;
+
+			if (args.Scanner.ReadString(Value, caseSensitive))
+			{
+				return Value.Length;
+			}
+			return -1;
 		}
 
 		public override Parser Clone(ParserCloneArgs args)

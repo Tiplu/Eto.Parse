@@ -361,24 +361,6 @@ namespace Eto.Parse
 		}
 
 		/// <summary>
-		/// Gets a value indicating that the specified <paramref name="parser"/> is contained within this instance
-		/// </summary>
-		/// <param name="parser">Parser to search for</param>
-		public bool Contains(Parser parser)
-		{
-			return Contains(new ParserContainsArgs(parser));
-		}
-
-		/// <summary>
-		/// Gets a value indicating that a parser is contained within this instance
-		/// </summary>
-		/// <param name="args">Arguments specifying which parser to search for and recursion</param>
-		public virtual bool Contains(ParserContainsArgs args)
-		{
-			return args.Parser == this;
-		}
-
-		/// <summary>
 		/// Determines whether this instance is left recursive with the specified parser
 		/// </summary>
 		/// <returns><c>true</c> if this instance is left recursive the specified parser; otherwise, <c>false</c>.</returns>

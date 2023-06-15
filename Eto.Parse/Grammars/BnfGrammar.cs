@@ -248,7 +248,7 @@ namespace Eto.Parse.Grammars
 			this.startParserName = startParserName;
 			this.startGrammar = grammar;
 			Parser parser;
-			var match = Match(new StringScanner(bnf));
+			var match = Match(new StringScanner(bnf, null));
 
 			if (!match.Success)
 			{

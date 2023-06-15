@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 
 namespace Eto.Parse.Scanners
 {
@@ -7,6 +8,8 @@ namespace Eto.Parse.Scanners
 		readonly int end;
 		readonly int start;
 		readonly string value;
+
+		readonly IReadOnlyDictionary<Guid, TreeScanContainer> tree;
 
 		public override bool IsEof
 		{
@@ -23,19 +26,21 @@ namespace Eto.Parse.Scanners
 			return value.Substring(Position, Math.Min(value.Length - Position, count));
 		}
 
-		public StringScanner(string value)
+		public StringScanner(string value, IReadOnlyDictionary<Guid, TreeScanContainer> tree)
 		{
 			this.value = value;
 			this.start = 0;
 			this.end = value.Length;
+			this.tree = tree;
 		}
 
-		public StringScanner(string value, int index, int length)
+		public StringScanner(string value, int index, int length, IReadOnlyDictionary<Guid, TreeScanContainer> tree)
 		{
 			this.value = value;
 			this.Position = index;
 			this.start = index;
 			this.end = index + length;
+			this.tree = tree;
 		}
 
 		public override int ReadChar()
@@ -105,6 +110,26 @@ namespace Eto.Parse.Scanners
 				return value.Substring(index, length);
 			}
 			return null;
+		}
+
+		public override bool FindInTree(Guid identifier, out string matchedValue, out string tokenName)
+		{
+			if (!tree.TryGetValue(identifier, out var result))
+			{
+				matchedValue = null;
+				tokenName = null;
+				return false;
+			}
+
+			var length = result.Find(value, Position, out tokenName);
+			if (length == -1)
+			{
+				matchedValue = null;
+				return false;
+			}
+			matchedValue = value[Position..(Position + length)];
+			Position += length;
+			return true;
 		}
 
 		public override int LineAtIndex(int index)
