@@ -113,7 +113,9 @@ namespace Eto.Parse.Grammars
 	public class EbnfGrammar : Grammar
 	{
 		Dictionary<string, Parser> parserLookup;
+		IReadOnlyDictionary<string, TreeScanContainer> alternativesTree;
 		public IReadOnlyDictionary<string, Parser> ParserLookup => parserLookup;
+		public IReadOnlyDictionary<string, TreeScanContainer> AlternativesTree => alternativesTree;
 		Dictionary<string, Parser> specialLookup = new Dictionary<string, Parser>(StringComparer.OrdinalIgnoreCase);
 		string startParserName;
 		Grammar startGrammar;
@@ -153,7 +155,7 @@ namespace Eto.Parse.Grammars
 			}
 		}
 
-		public EbnfGrammar(EbnfStyle style, bool allGrammar = false)
+		public EbnfGrammar(EbnfStyle style)
 			: base("ebnf")
 		{
 			Style = style;
@@ -244,7 +246,7 @@ namespace Eto.Parse.Grammars
 
 			Inner = ows & syntax_rules & ows;
 
-			AttachEvents(allGrammar);
+			AttachEvents();
 		}
 
 		protected override void OnPreMatch(Match match)
@@ -253,7 +255,7 @@ namespace Eto.Parse.Grammars
 			GenerateSeparator();
 		}
 
-		void AttachEvents(bool allGrammar)
+		void AttachEvents()
 		{
 			var syntax_rule = this["syntax rule"];
 			syntax_rule.Matched += m =>
@@ -262,27 +264,20 @@ namespace Eto.Parse.Grammars
 				var isTerminal = m["equals"].Text == ":=";
 				var parser = m.Tag as UnaryParser;
 				var inner = DefinitionList(m["definition list"], isTerminal);
-				if (inner is LiteralTerminal lit && (m["meta identifier"]?.StringValue.Contains("_Alternative_") ?? false))
+				var tokenId = m["meta identifier"]?.StringValue;
+				if (inner is LiteralTerminal lit
+					&& (tokenId?.Contains("_Alternative_") ?? false)
+					&& alternativesTree.TryGetValue(tokenId, out var treeScanContainer))
 				{
-					lit.TreeIndex = Guid.Parse(lit.Value);
+					inner = new AlternativeLiteralParser(tokenId, treeScanContainer) { Separator = separator };
 				}
-				if (separator != null && name == startParserName)
-					parser.Inner = separator & inner & separator;
-				else
-					parser.Inner = inner;
+
+				parser.Inner = inner;
 			};
 			syntax_rule.PreMatch += m =>
 			{
 				var name = m["meta identifier"].Text;
-				if (allGrammar)
-				{
-					m.Tag = parserLookup[name] = new Grammar(name);
-				}
-				else
-				{
-					var parser = (name == startParserName) ? (startGrammar ?? new Grammar(name)) : new UnaryParser(name);
-					m.Tag = parserLookup[name] = parser;
-				}
+				m.Tag = parserLookup[name] = new Grammar(name);
 			};
 		}
 
@@ -374,6 +369,7 @@ namespace Eto.Parse.Grammars
 					}
 					return parser;
 				case "terminal string":
+					//if(child.StringValue AlternativesTree.TryGetValue())
 					return new LiteralTerminal(child.StringValue);
 				case "hex character":
 					return new SingleCharTerminal((char)int.Parse(child.Text.Substring(2), NumberStyles.HexNumber));
@@ -463,48 +459,11 @@ namespace Eto.Parse.Grammars
 			return base.InnerParse(args);
 		}
 
-		public Grammar Build(string bnf, string startParserName, Grammar grammar = null)
+		public void Build(string bnf, IReadOnlyDictionary<string, TreeScanContainer> alternativesTree)
 		{
-			Parser parser;
-			this.startParserName = startParserName;
-			this.startGrammar = grammar;
-			var match = this.Match(new StringScanner(bnf, null));
-
-			if (!match.Success)
-			{
-				throw new FormatException(string.Format("Error parsing ebnf: \n{0}", match.ErrorMessage));
-			}
-			if (!parserLookup.TryGetValue(startParserName, out parser))
-				throw new ArgumentException("the topParser specified is not found in this ebnf");
-			return parser as Grammar;
-		}
-
-		public string ToCode(string bnf, string startParserName, string className = "GeneratedGrammar")
-		{
-			using (var writer = new StringWriter())
-			{
-				ToCode(bnf, startParserName, writer, className);
-				return writer.ToString();
-			}
-		}
-
-		public void ToCode(string bnf, string startParserName, TextWriter writer, string className = "GeneratedGrammar")
-		{
-			var parser = Build(bnf, startParserName);
-			var iw = new IndentedTextWriter(writer, "    ");
-
-			iw.WriteLine("/* Date Created: {0}, Source EBNF:", DateTime.Now);
-			iw.Indent++;
-			foreach (var line in bnf.Split('\n'))
-				iw.WriteLine(line);
-			iw.Indent--;
-			iw.WriteLine("*/");
-
-			var parserWriter = new CodeParserWriter
-			{
-				ClassName = className
-			};
-			parserWriter.Write(parser, writer);
+			this.startGrammar = null;
+			this.alternativesTree = alternativesTree;
+			var match = this.Match(new StringScanner(bnf), true);
 		}
 	}
 }

@@ -9,7 +9,6 @@ namespace Eto.Parse.Parsers
 		public bool? CaseSensitive { get; set; }
 
 		public string Value { get; set; }
-		public Guid? TreeIndex { get; set; }
 
 		public override string DescriptiveName
 		{
@@ -41,14 +40,6 @@ namespace Eto.Parse.Parsers
 
 		protected override int InnerParse(ParseArgs args)
 		{
-			if (TreeIndex.HasValue)
-			{
-				if (args.Scanner.FindInTree(TreeIndex.Value, out var matchedValue, out var tokenName))
-				{
-					return matchedValue.Length;
-				}
-			}
-
 			if (args.Scanner.ReadString(Value, caseSensitive))
 			{
 				return Value.Length;

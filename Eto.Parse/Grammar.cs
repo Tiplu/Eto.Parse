@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Eto.Parse.Parsers;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace Eto.Parse
 {
@@ -53,7 +54,7 @@ namespace Eto.Parse
 	/// </summary>
 	public class Grammar : UnaryParser
 	{
-		bool initialized;
+		public bool Initialized { get; private set; }
 
 		/// <summary>
 		/// Gets or sets a value indicating that the match events will be triggered after a successful match
@@ -80,7 +81,7 @@ namespace Eto.Parse
 		public bool AllowPartialMatch { get; set; }
 
 		public bool Trace { get; set; }
-		
+
 		/// <summary>
 		/// Sets the maximum character set range when <see cref="GrammarOptimizations.CharacterSetAlternations"/> is enabled.
 		/// </summary>
@@ -156,40 +157,41 @@ namespace Eto.Parse
 
 			//BuildChildren(new ParserChildrenArgs());
 			Initialize(new ParserInitializeArgs(this));
-			initialized = true;
+			Initialized = true;
 		}
 
 		void FixRecursiveGrammars()
 		{
 			var empty = new EmptyParser();
-            var alternates = Children.OfType<AlternativeParser>();
+			var alternates = Children.OfType<AlternativeParser>();
 			var first = new List<Parser>();
 			var second = new List<Parser>();
 			foreach (var alt in alternates.Distinct().ToList())
 			{
 				first.Clear();
 				second.Clear();
-                Parser separator = null;
-                for (int i = 0; i < alt.Items.Count; i++)
+				Parser separator = null;
+				for (int i = 0; i < alt.Items.Count; i++)
 				{
-                    Parser item = alt.Items[i];
-                    if (item != null && item.IsLeftRecursive(alt))
+					Parser item = alt.Items[i];
+					if (item != null && item.IsLeftRecursive(alt))
 					{
-                        var seqs = item.Scan(filter: p => {
-                            if (ReferenceEquals(p, alt))
-                                return false;
-                            if (p is SequenceParser seq && seq.Items.Count > 0 && seq.Items[0].IsLeftRecursive(alt))
-                            {
-                                seq.Items[0] = empty;
-                                return true;
-                            }
+						var seqs = item.Scan(filter: p =>
+						{
+							if (ReferenceEquals(p, alt))
+								return false;
+							if (p is SequenceParser seq && seq.Items.Count > 0 && seq.Items[0].IsLeftRecursive(alt))
+							{
+								seq.Items[0] = empty;
+								return true;
+							}
 
-                            return false;
-                        }).OfType<SequenceParser>();
+							return false;
+						}).OfType<SequenceParser>();
 						foreach (var seq in seqs)
 						{
-                            separator = seq.Separator;
-                            seq.Items.RemoveAt(0);
+							separator = seq.Separator;
+							seq.Items.RemoveAt(0);
 						}
 						if (!item.IsLeftRecursive(alt))
 							second.Add(item);
@@ -210,9 +212,9 @@ namespace Eto.Parse
 					if (first.Count > 0)
 					{
 						var firstParser = first.Count > 1 ? new AlternativeParser(first) : first[0];
-                        var repeat = new RepeatParser(secondParser, 0) { Separator = separator };
+						var repeat = new RepeatParser(secondParser, 0) { Separator = separator };
 
-                        if (first.Count == 1 && first[0] == null)
+						if (first.Count == 1 && first[0] == null)
 						{
 							alt.Items.Add(repeat);
 						}
@@ -228,10 +230,10 @@ namespace Eto.Parse
 		void OptimizeSingleItemParsers()
 		{
 			var parsers = from r in Children.OfType<ListParser>()
-			              where
-			                  r.Items.Count == 1
-			                  && (r is SequenceParser || r is AlternativeParser)
-			              select r;
+						  where
+							  r.Items.Count == 1
+							  && (r is SequenceParser || r is AlternativeParser)
+						  select r;
 			foreach (var parser in parsers.ToList())
 			{
 				var replacement = parser.Items[0];
@@ -246,8 +248,8 @@ namespace Eto.Parse
 		void OptimizeUnmatchedUnaryParsers()
 		{
 			var parsers = from r in Children.OfType<UnaryParser>()
-			              where !r.AddMatch && !r.AddError && r.Inner != null && r.GetType() == typeof(UnaryParser)
-			              select r;
+						  where !r.AddMatch && !r.AddError && r.Inner != null && r.GetType() == typeof(UnaryParser)
+						  select r;
 			foreach (var unary in parsers.ToList())
 			{
 				Replace(new ParserReplaceArgs(unary, unary.Inner));
@@ -261,20 +263,20 @@ namespace Eto.Parse
 			foreach (var alt in parsers.ToList())
 			{
 				if (alt.Items.All(r => r != null && r.Name == null &&
-				    (r is CharSetTerminal
-				    || r is CharRangeTerminal
-				    || r is SingleCharTerminal
-				    || (r is LiteralTerminal && ((LiteralTerminal)r).Value.Length == 1)
-				    )
-				    ))
+					(r is CharSetTerminal
+					|| r is CharRangeTerminal
+					|| r is SingleCharTerminal
+					|| (r is LiteralTerminal && ((LiteralTerminal)r).Value.Length == 1)
+					)
+					))
 				{
 					var chars = new List<char>();
 					var inverse = new List<char>();
 					var additionalParsers = new List<Parser>();
-                    for (int i1 = 0; i1 < alt.Items.Count; i1++)
+					for (int i1 = 0; i1 < alt.Items.Count; i1++)
 					{
-                        Parser item = alt.Items[i1];
-                        var singleChar = item as SingleCharTerminal;
+						Parser item = alt.Items[i1];
+						var singleChar = item as SingleCharTerminal;
 						if (singleChar != null)
 						{
 							if (singleChar.Inverse)
@@ -371,19 +373,16 @@ namespace Eto.Parse
 			return base.InnerParse(args);
 		}
 
-		public GrammarMatch Match(string value, IReadOnlyDictionary<Guid, TreeScanContainer> tree)
+		public GrammarMatch Match(string value, bool throwOnFail)
 		{
-			//value.ThrowIfNull("value");
-			return Match(new StringScanner(value, tree));
+			return Match(new StringScanner(value), throwOnFail);
 		}
 
-		public GrammarMatch Match(Scanner scanner)
+		public GrammarMatch Match(Scanner scanner, bool throwOnFail)
 		{
 			//scanner.ThrowIfNull("scanner");
 			var args = new ParseArgs(this, scanner);
 
-			if (!initialized)
-				Initialize();
 			Parse(args);
 			var root = args.Root;
 
@@ -392,13 +391,17 @@ namespace Eto.Parse
 				root.TriggerPreMatch();
 				root.TriggerMatch();
 			}
+			else if(throwOnFail)
+			{
+				throw new FormatException(string.Format("Error parsing ebnf: \n{0}", root.ErrorMessage));
+			}
 			return root;
 		}
 
-		public MatchCollection Matches(string value, IReadOnlyDictionary<Guid, TreeScanContainer> tree)
+		public MatchCollection Matches(string value)
 		{
 			value.ThrowIfNull("value");
-			return Matches(new StringScanner(value, tree));
+			return Matches(new StringScanner(value));
 		}
 
 		public MatchCollection Matches(Scanner scanner)
@@ -408,7 +411,7 @@ namespace Eto.Parse
 			var eof = scanner.IsEof;
 			while (!eof)
 			{
-				var match = Match(scanner);
+				var match = Match(scanner, false);
 				if (match.Success)
 				{
 					matches.AddRange(match.Matches);
