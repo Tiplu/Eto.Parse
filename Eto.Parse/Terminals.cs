@@ -67,6 +67,11 @@ namespace Eto.Parse
 
 		public static EndParser End { get { return new EndParser(); } }
 
+		public static LiteralTerminal Literal(string matchValue)
+		{
+			return new LiteralTerminal(matchValue);
+		}
+
 		public static RepeatCharTerminal Repeat(Func<char, bool> test, int minimum, int maximum = int.MaxValue)
 		{
 			return new RepeatCharTerminal(new RepeatCharItem(test, minimum, maximum));

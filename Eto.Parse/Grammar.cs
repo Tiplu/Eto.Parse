@@ -383,6 +383,9 @@ namespace Eto.Parse
 			//scanner.ThrowIfNull("scanner");
 			var args = new ParseArgs(this, scanner);
 
+			if (!Initialized)
+				Initialize();
+
 			Parse(args);
 			var root = args.Root;
 

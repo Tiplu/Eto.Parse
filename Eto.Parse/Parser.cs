@@ -18,7 +18,7 @@ namespace Eto.Parse
 	{
 		bool hasNamedChildren;
 		ParseMode mode;
-		string name;
+		protected string name;
 		bool addError;
 		bool addErrorSet;
 		bool addMatch;

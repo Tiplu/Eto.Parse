@@ -3,6 +3,7 @@ using Eto.Parse.Scanners;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.RegularExpressions;
 
 namespace Eto.Parse.Parsers
 {
@@ -29,6 +30,7 @@ namespace Eto.Parse.Parsers
 			TokenId = other.TokenId;
 			TreeScanContainer = other.TreeScanContainer;
 			Separator = other.Separator;
+			ParserLookup = other.ParserLookup;
 		}
 
 		public AlternativeLiteralParser()
@@ -36,11 +38,13 @@ namespace Eto.Parse.Parsers
 			Separator = DefaultSeparator;
 		}
 
-		public AlternativeLiteralParser(string tokenId, TreeScanContainer treeScanContainer)
+		public AlternativeLiteralParser(string tokenId, TreeScanContainer treeScanContainer, Dictionary<string, Parser> parserLookup)
 		{
+			name = tokenId;
 			TokenId = tokenId;
 			TreeScanContainer = treeScanContainer;
 			Separator = DefaultSeparator;
+			ParserLookup = parserLookup;
 		}
 
 		protected override void InnerInitialize(ParserInitializeArgs args)
@@ -51,11 +55,21 @@ namespace Eto.Parse.Parsers
 
 		protected override int InnerParse(ParseArgs args)
 		{
+			args.Push();
 			var pos = args.Scanner.Position;
 			if (!args.Scanner.FindInTree(TreeScanContainer, out var matchedValue, out var nextTokenName))
 			{
+				args.PopFailed();
+				if (AddError)
+				{
+					args.AddError(this);
+					return -1;
+				}
+				args.SetChildError();
 				return -1;
 			}
+
+			args.PopMatch(this, pos, matchedValue.Length);
 
 			if (!nextTokenName.Any())
 			{
@@ -63,54 +77,60 @@ namespace Eto.Parse.Parsers
 				return matchedValue.Length;
 			}
 
+			// progress through the seperators
 			var sepMatch = Separator.Parse(args);
-			if (sepMatch < 0)
+
+			// parse the continuation
+			foreach (var nextParser in nextTokenName.Select(x => ParserLookup[x]))
 			{
-				// failed
-				args.Scanner.Position = pos;
-				return -1;
+				args.Push();
+				int continuationMatch = ParseContinuation(nextParser, args);
+				if (continuationMatch == -1)
+				{
+					// failed
+					args.Scanner.Position = pos;
+
+					args.PopFailed();
+					if (AddError)
+					{
+						args.AddError(this);
+						return -1;
+					}
+					args.SetChildError();
+					return -1;
+				}
+
+				var continuationIndex = matchedValue.Length + sepMatch;
+				args.PopMatch(nextParser, continuationIndex, continuationMatch);
+				return continuationIndex + continuationMatch;
 			}
 
-			int continuationMatch = ParseContinuation(nextTokenName.Select(x => ParserLookup[x]).ToArray(), args);
-			if (continuationMatch == -1)
-			{
-				// failed
-				args.Scanner.Position = pos;
-				return -1;
-			}
-			return matchedValue.Length + sepMatch + continuationMatch;
+			return matchedValue.Length;
 		}
 
 		// Copy-Paste from AlternativeParser
-		private static int ParseContinuation(Parser[] items, ParseArgs args)
+		private static int ParseContinuation(Parser parser, ParseArgs args)
 		{
-			var count = items.Length;
 			args.Push();
-			for (int i = 0; i < count; i++)
+			if (parser != null)
 			{
-				var parser = items[i];
-				if (parser != null)
+				var match = parser.Parse(args);
+				if (match < 0)
 				{
-					var match = parser.Parse(args);
-					if (match < 0)
-					{
-						args.ClearMatches();
-					}
-					else
-					{
-						args.PopSuccess();
-						return match;
-					}
+					args.ClearMatches();
+					return -1;
 				}
 				else
 				{
-					args.PopFailed();
-					return 0;
+					args.PopSuccess();
+					return match;
 				}
 			}
-			args.PopFailed();
-
-			return -1;
+			else
+			{
+				args.PopFailed();
+				return 0;
+			}
 		}
 
 		public override Parser Clone(ParserCloneArgs args)

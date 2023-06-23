@@ -14,12 +14,16 @@ namespace Eto.Parse.Scanners
 			public int Length => Ebnf.Length;
 			public bool IsEmpty(int at) => Length <= at;
 			public char At(int at) => Ebnf[at];
+
+			public override string ToString() => Ebnf;
 		}
 
+		public string TypeId { get; }
 		public Entry[] SortedEntries { get; }
 
-		public TreeScanContainer(IEnumerable<Entry> sortedEntries)
+		public TreeScanContainer(string typeId, IEnumerable<Entry> sortedEntries)
 		{
+			TypeId = typeId;
 			SortedEntries = sortedEntries.ToArray();
 		}
 

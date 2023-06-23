@@ -7,6 +7,7 @@ using Eto.Parse.Writers;
 using System.IO;
 using System.CodeDom.Compiler;
 using System.Globalization;
+using System.Reflection;
 
 namespace Eto.Parse.Grammars
 {
@@ -155,7 +156,7 @@ namespace Eto.Parse.Grammars
 			}
 		}
 
-		public EbnfGrammar(EbnfStyle style)
+		public EbnfGrammar(EbnfStyle style, bool allGrammar = false)
 			: base("ebnf")
 		{
 			Style = style;
@@ -246,7 +247,7 @@ namespace Eto.Parse.Grammars
 
 			Inner = ows & syntax_rules & ows;
 
-			AttachEvents();
+			AttachEvents(allGrammar);
 		}
 
 		protected override void OnPreMatch(Match match)
@@ -255,7 +256,7 @@ namespace Eto.Parse.Grammars
 			GenerateSeparator();
 		}
 
-		void AttachEvents()
+		void AttachEvents(bool allGrammar)
 		{
 			var syntax_rule = this["syntax rule"];
 			syntax_rule.Matched += m =>
@@ -269,15 +270,28 @@ namespace Eto.Parse.Grammars
 					&& (tokenId?.Contains("_Alternative_") ?? false)
 					&& alternativesTree.TryGetValue(tokenId, out var treeScanContainer))
 				{
-					inner = new AlternativeLiteralParser(tokenId, treeScanContainer) { Separator = separator };
+					inner = new AlternativeLiteralParser(tokenId, treeScanContainer, parserLookup)
+					{
+						Separator = separator
+					};
 				}
-
-				parser.Inner = inner;
+				if (separator != null && name == startParserName)
+					parser.Inner = separator & inner & separator;
+				else
+					parser.Inner = inner;
 			};
 			syntax_rule.PreMatch += m =>
 			{
 				var name = m["meta identifier"].Text;
-				m.Tag = parserLookup[name] = new Grammar(name);
+				if (allGrammar)
+				{
+					m.Tag = parserLookup[name] = new Grammar(name);
+				}
+				else
+				{
+					var parser = (name == startParserName) ? (startGrammar ?? new Grammar(name)) : new UnaryParser(name);
+					m.Tag = parserLookup[name] = parser;
+				}
 			};
 		}
 
@@ -459,7 +473,7 @@ namespace Eto.Parse.Grammars
 			return base.InnerParse(args);
 		}
 
-		public void Build(string bnf, IReadOnlyDictionary<string, TreeScanContainer> alternativesTree)
+		public void Build(string bnf, IReadOnlyDictionary<string, TreeScanContainer> alternativesTree = null)
 		{
 			this.startGrammar = null;
 			this.alternativesTree = alternativesTree;
