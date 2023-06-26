@@ -51,6 +51,14 @@ namespace Eto.Parse.Parsers
 		{
 			base.InnerInitialize(args);
 			CaseSensitive ??= args.Grammar.CaseSensitive;
+
+			foreach(var continuation in TreeScanContainer.SortedEntries.SelectMany(x => x.NextTokens))
+			{
+				if(ParserLookup.TryGetValue(continuation, out var parser))
+				{
+					parser.Initialize(args);
+				}
+			}
 		}
 
 		protected override int InnerParse(ParseArgs args)
@@ -83,25 +91,15 @@ namespace Eto.Parse.Parsers
 			// parse the continuation
 			foreach (var nextParser in nextTokenName.Select(x => ParserLookup[x]))
 			{
-				args.Push();
 				int continuationMatch = ParseContinuation(nextParser, args);
 				if (continuationMatch == -1)
 				{
 					// failed
 					args.Scanner.Position = pos;
-
-					args.PopFailed();
-					if (AddError)
-					{
-						args.AddError(this);
-						return -1;
-					}
-					args.SetChildError();
 					return -1;
 				}
 
 				var continuationIndex = matchedValue.Length + sepMatch;
-				args.PopMatch(nextParser, continuationIndex, continuationMatch);
 				return continuationIndex + continuationMatch;
 			}
 
@@ -111,24 +109,20 @@ namespace Eto.Parse.Parsers
 		// Copy-Paste from AlternativeParser
 		private static int ParseContinuation(Parser parser, ParseArgs args)
 		{
-			args.Push();
 			if (parser != null)
 			{
 				var match = parser.Parse(args);
 				if (match < 0)
 				{
-					args.ClearMatches();
 					return -1;
 				}
 				else
 				{
-					args.PopSuccess();
 					return match;
 				}
 			}
 			else
 			{
-				args.PopFailed();
 				return 0;
 			}
 		}
