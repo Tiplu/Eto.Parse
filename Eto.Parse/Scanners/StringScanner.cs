@@ -1,5 +1,4 @@
 using System;
-using System.Collections.Generic;
 
 namespace Eto.Parse.Scanners
 {
@@ -108,9 +107,9 @@ namespace Eto.Parse.Scanners
 			return null;
 		}
 
-		public override bool FindInTree(TreeScanContainer treeScanContainer, out string matchedValue, out string[] nextTokenNames)
+		public override bool FindInTree(TreeScanContainer treeScanContainer, out string matchedValue, out (string, string)[] matchedTokensAndContinuations)
 		{
-			var length = treeScanContainer.Find(value, Position, out nextTokenNames);
+			var length = treeScanContainer.Find(value, Position, out matchedTokensAndContinuations);
 			if (length == -1)
 			{
 				matchedValue = null;

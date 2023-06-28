@@ -46,7 +46,7 @@ namespace Eto.Parse
 
 		public string Text { get { return Success ? scanner.Substring(index, length) : null; } }
 
-		public string Name { get { return name ?? (name = parser.Name); } }
+		public string Name { get { return name ?? (name = parser.Name); } set { name = value; } }
 
 		public Parser Parser { get { return parser; } }
 

@@ -265,16 +265,17 @@ namespace Eto.Parse.Grammars
 				var isTerminal = m["equals"].Text == ":=";
 				var parser = m.Tag as UnaryParser;
 				var inner = DefinitionList(m["definition list"], isTerminal);
-				var tokenId = m["meta identifier"]?.StringValue;
+
 				if (inner is LiteralTerminal lit
-					&& (tokenId?.Contains("_Alternative_") ?? false)
-					&& alternativesTree.TryGetValue(tokenId, out var treeScanContainer))
+					&& (name?.Contains("_Alternative_") ?? false)
+					&& alternativesTree.TryGetValue(name, out var treeScanContainer))
 				{
-					inner = new AlternativeLiteralParser(tokenId, treeScanContainer, parserLookup)
+					inner = new AlternativeLiteralParser(name, treeScanContainer, parserLookup)
 					{
 						Separator = separator
 					};
 				}
+
 				if (separator != null && name == startParserName)
 					parser.Inner = separator & inner & separator;
 				else
@@ -477,7 +478,7 @@ namespace Eto.Parse.Grammars
 		{
 			this.startGrammar = null;
 			this.alternativesTree = alternativesTree;
-			var match = this.Match(new StringScanner(bnf), true);
+			var match = this.Match(new StringScanner(bnf), true, null);
 		}
 	}
 }

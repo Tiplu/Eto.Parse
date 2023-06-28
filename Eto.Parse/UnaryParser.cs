@@ -1,6 +1,8 @@
+using Eto.Parse.Parsers;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
 
 namespace Eto.Parse
 {
@@ -58,6 +60,8 @@ namespace Eto.Parse
 		{
 			if (Inner != null)
 			{
+				if (!string.IsNullOrEmpty(name) && name == args.AnyTypeAtom && Inner is AlternativeParser alt) { alt.EnableExhaustiveSearch(); }
+
 				Inner.Initialize(args);
 			}
 			base.InnerInitialize(args);

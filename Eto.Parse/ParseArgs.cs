@@ -267,7 +267,7 @@ namespace Eto.Parse
 		/// <param name="parser">Parser with the name to add to the match tree</param>
 		/// <param name="index">Index of the start of the match</param>
 		/// <param name="length">Length of the match</param>
-		public void PopMatch(Parser parser, int index, int length)
+		public Match PopMatch(Parser parser, int index, int length)
 		{
 			// always successful here, assume at least two or more nodes
 			var last = nodes.Pop();
@@ -280,8 +280,11 @@ namespace Eto.Parse
 					node = new MatchCollection();
 					nodes.Last = node;
 				}
-				node.Add(new Match(parser, Scanner, index, length, last));
+				Match m = new Match(parser, Scanner, index, length, last);
+				node.Add(m);
+				return m;
 			}
+			return null;
 		}
 
 		/// <summary>

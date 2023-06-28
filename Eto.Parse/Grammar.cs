@@ -133,7 +133,7 @@ namespace Eto.Parse
 		/// the grammar is fully defined. This will be called automatically the first
 		/// time you call the <see cref="Match(string)"/> method.
 		/// </remarks>
-		public void Initialize()
+		public void Initialize(string anytypeAtom)
 		{
 			if (Optimizations.HasFlag(GrammarOptimizations.CharacterSetAlternations))
 			{
@@ -156,7 +156,7 @@ namespace Eto.Parse
 			}
 
 			//BuildChildren(new ParserChildrenArgs());
-			Initialize(new ParserInitializeArgs(this));
+			Initialize(new ParserInitializeArgs(this, anytypeAtom));
 			Initialized = true;
 		}
 
@@ -373,18 +373,18 @@ namespace Eto.Parse
 			return base.InnerParse(args);
 		}
 
-		public GrammarMatch Match(string value, bool throwOnFail)
+		public GrammarMatch Match(string value, bool throwOnFail, string anyTypeAtom)
 		{
-			return Match(new StringScanner(value), throwOnFail);
+			return Match(new StringScanner(value), throwOnFail, anyTypeAtom);
 		}
 
-		public GrammarMatch Match(Scanner scanner, bool throwOnFail)
+		public GrammarMatch Match(Scanner scanner, bool throwOnFail, string anyTypeAtom)
 		{
 			//scanner.ThrowIfNull("scanner");
 			var args = new ParseArgs(this, scanner);
 
 			if (!Initialized)
-				Initialize();
+				Initialize(anyTypeAtom);
 
 			Parse(args);
 			var root = args.Root;
@@ -414,7 +414,7 @@ namespace Eto.Parse
 			var eof = scanner.IsEof;
 			while (!eof)
 			{
-				var match = Match(scanner, false);
+				var match = Match(scanner, false, null);
 				if (match.Success)
 				{
 					matches.AddRange(match.Matches);

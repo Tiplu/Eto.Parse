@@ -1,6 +1,6 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.InteropServices;
 
 namespace Eto.Parse.Scanners
 {
@@ -9,8 +9,10 @@ namespace Eto.Parse.Scanners
 		public class Entry
 		{
 			public string Ebnf { get; set; }
-			public string[] ThisToken { get; set; }
-			public string[] NextTokens { get; set; }
+
+			// ThisToken can be variable and function for example
+			// Continuation could be multiple functions, custom terms etc.
+			public (string, string)[] ThisTokenWithContinuation { get; set; }
 
 			public int Length => Ebnf.Length;
 			public override string ToString() => Ebnf;
@@ -73,9 +75,11 @@ namespace Eto.Parse.Scanners
 			return FindUpperBorder(pivot + 1, upperBorder, c, charIndex);
 		}
 
-		public int Find(string fullString, int startIndex, out string[] tokenName)
+		public int Find(string fullString, int startIndex, out (string, string)[] matchedTokensAndContinuations)
 		{
-			tokenName = null;
+			matchedTokensAndContinuations = Array.Empty<(string, string)>();
+			if (SortedEntries.Length == 0) { return -1; }
+
 			int lowBorder = 0;
 			int highBorder = SortedEntries.Length;
 
@@ -119,7 +123,7 @@ namespace Eto.Parse.Scanners
 			}
 
 			// Return the length of the parsed string
-			tokenName = match.NextTokens;
+			matchedTokensAndContinuations = match.ThisTokenWithContinuation;
 			return match.Length;
 		}
 	}

@@ -52,9 +52,9 @@ namespace Eto.Parse.Parsers
 			base.InnerInitialize(args);
 			CaseSensitive ??= args.Grammar.CaseSensitive;
 
-			foreach(var continuation in TreeScanContainer.SortedEntries.SelectMany(x => x.NextTokens))
+			foreach (var continuation in TreeScanContainer.SortedEntries.SelectMany(x => x.ThisTokenWithContinuation.Select(y => y.Item2).Where(y => y != null)))
 			{
-				if(ParserLookup.TryGetValue(continuation, out var parser))
+				if (ParserLookup.TryGetValue(continuation, out var parser))
 				{
 					parser.Initialize(args);
 				}
@@ -65,7 +65,7 @@ namespace Eto.Parse.Parsers
 		{
 			args.Push();
 			var pos = args.Scanner.Position;
-			if (!args.Scanner.FindInTree(TreeScanContainer, out var matchedValue, out var nextTokenName))
+			if (!args.Scanner.FindInTree(TreeScanContainer, out var matchedValue, out (string Token, string Continuation)[] matchedTokensAndContinuations))
 			{
 				args.PopFailed();
 				if (AddError)
@@ -77,33 +77,46 @@ namespace Eto.Parse.Parsers
 				return -1;
 			}
 
-			args.PopMatch(this, pos, matchedValue.Length);
+			var m = args.PopMatch(this, pos, matchedValue.Length);
 
-			if (!nextTokenName.Any())
+			var tokenWithoutContinuation = matchedTokensAndContinuations.FirstOrDefault(x => x.Continuation is null);
+			if (matchedTokensAndContinuations.All(x => x.Continuation is null))
 			{
 				// No continuation
+				m.Name = tokenWithoutContinuation.Token;
 				return matchedValue.Length;
 			}
+
+			// We could stop or go on
+			bool possibleContinuation = tokenWithoutContinuation.Token is not null;
+			if (possibleContinuation) { pos = args.Scanner.Position; }
 
 			// progress through the seperators
 			var sepMatch = Separator.Parse(args);
 
-			// parse the continuation
-			foreach (var nextParser in nextTokenName.Select(x => ParserLookup[x]))
+			// try to parse the continuation
+			foreach ((string thisToken, string continuation) in matchedTokensAndContinuations.Where(x => x.Continuation is not null))
 			{
-				int continuationMatch = ParseContinuation(nextParser, args);
+				int continuationMatch = ParseContinuation(ParserLookup[continuation], args);
 				if (continuationMatch == -1)
 				{
-					// failed
+					// failed, try the next
 					args.Scanner.Position = pos;
-					return -1;
+					continue;
 				}
 
+				m.Name = thisToken;
 				var continuationIndex = matchedValue.Length + sepMatch;
 				return continuationIndex + continuationMatch;
 			}
 
-			return matchedValue.Length;
+			if(possibleContinuation)
+			{
+				m.Name = tokenWithoutContinuation.Token;
+				return matchedValue.Length;
+			}
+
+			return -1;
 		}
 
 		// Copy-Paste from AlternativeParser

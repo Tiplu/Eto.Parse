@@ -1,5 +1,4 @@
 using Eto.Parse.Scanners;
-using System;
 
 namespace Eto.Parse
 {
@@ -21,7 +20,7 @@ namespace Eto.Parse
 
 		public abstract string Substring(int index, int length);
 
-		public abstract bool FindInTree(TreeScanContainer identifier, out string matchedValue, out string[] tokenNames);
+		public abstract bool FindInTree(TreeScanContainer identifier, out string matchedValue, out (string, string)[] matchedTokensAndContinuations);
 
 		public abstract int LineAtIndex(int index);
 	}

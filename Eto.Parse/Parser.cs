@@ -28,7 +28,8 @@ namespace Eto.Parse
 		{
 			Simple,
 			NameOrError,
-			NamedChildren
+			NamedChildren,
+			Continuation,
 		}
 
 		#region Properties
@@ -261,7 +262,7 @@ namespace Eto.Parse
 		/// <returns>The length of the successfully matched value (can be zero), or -1 if not matched</returns>
 		public int Parse(ParseArgs args)
 		{
-			if (mode == ParseMode.Simple)
+			if (mode == ParseMode.Simple || mode == ParseMode.Continuation)
 			{
 				var match = InnerParse(args);
 				if (match >= 0)
@@ -350,7 +351,14 @@ namespace Eto.Parse
 					parentNamed = parent.AddMatch;
 				}
 
-				mode = (hasNamedChildren && (AddMatch/* || parentNamed*/)) ? ParseMode.NamedChildren : AddMatch || AddError ? ParseMode.NameOrError : ParseMode.Simple;
+				if (name?.Contains("_Continue_") ?? false)
+				{
+					mode = ParseMode.Continuation;
+				}
+				else
+				{
+					mode = (hasNamedChildren && (AddMatch/* || parentNamed*/)) ? ParseMode.NamedChildren : AddMatch || AddError ? ParseMode.NameOrError : ParseMode.Simple;
+				}
 
 				args.Pop();
 			}
