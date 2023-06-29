@@ -115,6 +115,7 @@ namespace Eto.Parse.Grammars
 	{
 		Dictionary<string, Parser> parserLookup;
 		IReadOnlyDictionary<string, TreeScanContainer> alternativesTree;
+		HashSet<string> allGrammars;
 		public IReadOnlyDictionary<string, Parser> ParserLookup => parserLookup;
 		public IReadOnlyDictionary<string, TreeScanContainer> AlternativesTree => alternativesTree;
 		Dictionary<string, Parser> specialLookup = new Dictionary<string, Parser>(StringComparer.OrdinalIgnoreCase);
@@ -284,7 +285,7 @@ namespace Eto.Parse.Grammars
 			syntax_rule.PreMatch += m =>
 			{
 				var name = m["meta identifier"].Text;
-				if (allGrammar)
+				if (allGrammar && this.allGrammars != null && this.allGrammars.Contains(name))
 				{
 					m.Tag = parserLookup[name] = new Grammar(name);
 				}
@@ -474,10 +475,11 @@ namespace Eto.Parse.Grammars
 			return base.InnerParse(args);
 		}
 
-		public void Build(string bnf, IReadOnlyDictionary<string, TreeScanContainer> alternativesTree = null)
+		public void Build(string bnf, IReadOnlyDictionary<string, TreeScanContainer> alternativesTree = null, HashSet<string> allGrammars = null)
 		{
 			this.startGrammar = null;
 			this.alternativesTree = alternativesTree;
+			this.allGrammars = allGrammars;
 			var match = this.Match(new StringScanner(bnf), true, null);
 		}
 	}

@@ -262,11 +262,23 @@ namespace Eto.Parse
 		/// <returns>The length of the successfully matched value (can be zero), or -1 if not matched</returns>
 		public int Parse(ParseArgs args)
 		{
-			if (mode == ParseMode.Simple || mode == ParseMode.Continuation)
+			if (mode == ParseMode.Simple)
 			{
 				var match = InnerParse(args);
 				if (match >= 0)
 					return match;
+
+				args.SetChildError();
+				return match;
+			}
+			else if (mode == ParseMode.Continuation)
+			{
+				var pos = args.Scanner.Position;
+				var match = InnerParse(args);
+				if (match >= 0)
+				{
+					return match;
+				}
 
 				args.SetChildError();
 				return match;
