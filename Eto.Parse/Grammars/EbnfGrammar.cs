@@ -482,6 +482,22 @@ namespace Eto.Parse.Grammars
 			this.allGrammars = allGrammars;
 			var match = this.Match(new StringScanner(bnf), true, null);
 		}
+
+		public Grammar Build(string bnf, string startParserName, Grammar grammar = null)
+		{
+			Parser parser;
+			this.startParserName = startParserName;
+			this.startGrammar = grammar;
+			var match = this.Match(new StringScanner(bnf), true, null);
+
+			if (!match.Success)
+			{
+				throw new FormatException(string.Format("Error parsing ebnf: \n{0}", match.ErrorMessage));
+			}
+			if (!parserLookup.TryGetValue(startParserName, out parser))
+				throw new ArgumentException("the topParser specified is not found in this ebnf");
+			return parser as Grammar;
+		}
 	}
 }
 

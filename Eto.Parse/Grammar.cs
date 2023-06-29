@@ -373,7 +373,7 @@ namespace Eto.Parse
 			return base.InnerParse(args);
 		}
 
-		public GrammarMatch Match(string value, bool throwOnFail, string anyTypeAtom)
+		public GrammarMatch Match(string value, bool throwOnFail = true, string anyTypeAtom = null)
 		{
 			return Match(new StringScanner(value), throwOnFail, anyTypeAtom);
 		}
@@ -394,7 +394,7 @@ namespace Eto.Parse
 				root.TriggerPreMatch();
 				root.TriggerMatch();
 			}
-			else if(throwOnFail)
+			else if (throwOnFail)
 			{
 				throw new FormatException(string.Format("Error parsing ebnf: \n{0}", root.ErrorMessage));
 			}
