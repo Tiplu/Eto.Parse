@@ -30,14 +30,8 @@ namespace Eto.Parse
 	/// </remarks>
 	public abstract class ParserChain
 	{
-		readonly List<Parser> parents = new List<Parser>();
-
-		/// <summary>
-		/// Gets an enumerable of parents in the chain
-		/// </summary>
-		/// <value>The parents.</value>
-		public IEnumerable<Parser> Parents { get { return parents; } }
-
+		readonly HashSet<Parser> parents = new HashSet<Parser>();
+		
 		/// <summary>
 		/// Pushes the specified parser onto the chain
 		/// </summary>
@@ -56,9 +50,9 @@ namespace Eto.Parse
 		/// <summary>
 		/// Pop the last parser from the chain
 		/// </summary>
-		public void Pop()
+		public void Remove(Parser parser)
 		{
-			parents.RemoveAt(parents.Count - 1);
+			parents.Remove(parser);
 		}
 	}
 }

@@ -352,7 +352,7 @@ namespace Eto.Parse
 
 				mode = (hasNamedChildren && (AddMatch/* || parentNamed*/)) ? ParseMode.NamedChildren : AddMatch || AddError ? ParseMode.NameOrError : ParseMode.Simple;
 
-				args.Pop();
+				args.Remove(this);
 			}
 		}
 

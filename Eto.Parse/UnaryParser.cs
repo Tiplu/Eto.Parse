@@ -70,7 +70,7 @@ namespace Eto.Parse
 			if (Inner != null && args.Push(this))
 			{
 				var ret = Inner.Contains(args);
-				args.Pop();
+				args.Remove(this);
 				return ret;
 			}
 			return false;
@@ -81,7 +81,7 @@ namespace Eto.Parse
 			if (Inner != null && args.Push(this))
 			{
 				var ret = Inner.Find(args);
-				args.Pop();
+				args.Remove(this);
 				return base.Find(args).Concat(ret);
 			}
 			return base.Find(args);
@@ -108,7 +108,7 @@ namespace Eto.Parse
 				if (args.Push(this))
 				{
 					var ret = Inner.IsLeftRecursive(args);
-					args.Pop();
+					args.Remove(this);
 					return ret;
 				}
 				return false;
