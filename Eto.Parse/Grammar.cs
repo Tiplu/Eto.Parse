@@ -353,12 +353,11 @@ namespace Eto.Parse
 				IEnumerable<(Parser P, bool IsOptional)> errors = null;
 				if (match < 0 || match == args.ErrorIndex)
 				{
-					var errorList = new List<(Parser P, bool IsOptional)>(args.Errors.Count());
+					var errorList = new HashSet<(Parser P, bool IsOptional)>(); //args.Errors.Count()
 					for (int i = 0; i < args.Errors.Count(); i++)
 					{
 						var error = args.Errors[i];
-						if (!errorList.Contains(error))
-							errorList.Add(error);
+						errorList.Add(error);
 					}
 					errors = errorList;
 					errorIndex = args.ErrorIndex;
