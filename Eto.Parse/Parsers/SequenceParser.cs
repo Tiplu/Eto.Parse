@@ -196,10 +196,10 @@ namespace Eto.Parse.Parsers
 				var item = Items[0];
 				if (item != null && item.IsLeftRecursive(args))
 				{
-					args.Pop();
+					args.Remove(this);
 					return true;
 				}
-				args.Pop();
+				args.Remove(this);
 			}
 			return false;
 		}

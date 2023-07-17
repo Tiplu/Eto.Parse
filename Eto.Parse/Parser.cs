@@ -352,7 +352,7 @@ namespace Eto.Parse
 
 				mode = (hasNamedChildren && (AddMatch/* || parentNamed*/)) ? ParseMode.NamedChildren : AddMatch || AddError ? ParseMode.NameOrError : ParseMode.Simple;
 
-				args.Pop();
+				args.Remove(this);
 			}
 		}
 
@@ -515,6 +515,36 @@ namespace Eto.Parse
 		public virtual object GetValue(string text)
 		{
 			return text;
+		}
+
+		protected bool Equals(Parser other)
+		{
+			return hasNamedChildren == other.hasNamedChildren && mode == other.mode && name == other.name && addError == other.addError && addErrorSet == other.addErrorSet && addMatch == other.addMatch && addMatchSet == other.addMatchSet && initialized == other.initialized && Reusable == other.Reusable;
+		}
+
+		public override bool Equals(object obj)
+		{
+			if (ReferenceEquals(null, obj)) return false;
+			if (ReferenceEquals(this, obj)) return true;
+			if (obj.GetType() != this.GetType()) return false;
+			return Equals((Parser)obj);
+		}
+
+		public override int GetHashCode()
+		{
+			unchecked
+			{
+				var hashCode = hasNamedChildren.GetHashCode();
+				hashCode = (hashCode * 397) ^ (int)mode;
+				hashCode = (hashCode * 397) ^ (name != null ? name.GetHashCode() : 0);
+				hashCode = (hashCode * 397) ^ addError.GetHashCode();
+				hashCode = (hashCode * 397) ^ addErrorSet.GetHashCode();
+				hashCode = (hashCode * 397) ^ addMatch.GetHashCode();
+				hashCode = (hashCode * 397) ^ addMatchSet.GetHashCode();
+				hashCode = (hashCode * 397) ^ initialized.GetHashCode();
+				hashCode = (hashCode * 397) ^ Reusable.GetHashCode();
+				return hashCode;
+			}
 		}
 	}
 }

@@ -123,11 +123,11 @@ namespace Eto.Parse.Parsers
                     Parser item = Items[i];
                     if (item != null && item.IsLeftRecursive(args))
 					{
-						args.Pop();
+						args.Remove(this);
 						return true;
 					}
 				}
-				args.Pop();
+				args.Remove(this);
 			}
 			return false;
 		}
